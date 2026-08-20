@@ -43,6 +43,10 @@ public class PatientController : MonoBehaviour
     [Header("Cash")]
     [SerializeField] private GameObject cashBundleObject;
 
+    [Header("Patient Head UI — Walking to Lobby/Bed")]
+    [Tooltip("Shown as soon as the patient starts walking. Hidden the moment the patient lays down on the bed.")]
+    [SerializeField] private GameObject walkingToLobbyHeadUI;
+
     [Header("Patient Head UI — Post-bed")]
     [SerializeField] private GameObject postBedHeadUI;
 
@@ -51,7 +55,7 @@ public class PatientController : MonoBehaviour
     private static readonly Quaternion Rot_0_Neg90_0 = Quaternion.Euler(0f, -90f, 0f);
 
     public static bool IsFlowComplete { get; private set; } = false;
-    public bool IsBedMessy            { get; private set; } = false;
+    public bool IsBedMessy { get; private set; } = false;
 
     private void Awake()
     {
@@ -64,6 +68,12 @@ public class PatientController : MonoBehaviour
 
     private IEnumerator PatientFlow()
     {
+        // Wait until GameIntroManager finishes the intro hold before the patient moves.
+        yield return new WaitUntil(() => GameIntroManager.IntroComplete);
+
+        // Patient begins walking — show the walking head UI.
+        if (walkingToLobbyHeadUI != null) walkingToLobbyHeadUI.SetActive(true);
+
         PlayableSequenceManager.Instance?.ShowQuestText("Unlock the room");
         ArrowManager.Instance?.PointArrowTowards(lobbyArrowTarget);
 
@@ -82,6 +92,9 @@ public class PatientController : MonoBehaviour
         yield return MovePatient(patientMovingTowardsBedPoint1);
         yield return MovePatient(patientMovingTowardsBedPoint2);
 
+        // Patient is about to lay down — hide the walking head UI.
+        if (walkingToLobbyHeadUI != null) walkingToLobbyHeadUI.SetActive(false);
+
         Quaternion layRot = Rot_0_Neg90_0;
         patient.SetPositionAndRotation(patientLayingDownPoint.position, layRot);
         PatientAnimationController.Instance?.SetLayDown();
@@ -99,8 +112,8 @@ public class PatientController : MonoBehaviour
 
         if (sleepingVFX != null) sleepingVFX.SetActive(false);
 
-        if (bedObject   != null) bedObject.SetActive(false);
-        if (bedMess     != null) bedMess.SetActive(true);
+        if (bedObject != null) bedObject.SetActive(false);
+        if (bedMess != null) bedMess.SetActive(true);
         if (bedDirtyVFX != null) bedDirtyVFX.SetActive(true);
 
         IsBedMessy = true;
@@ -125,8 +138,8 @@ public class PatientController : MonoBehaviour
         IsBedMessy = false;
 
         if (bedDirtyVFX != null) bedDirtyVFX.SetActive(false);
-        if (bedMess     != null) bedMess.SetActive(false);
-        if (bedObject   != null) bedObject.SetActive(true);
+        if (bedMess != null) bedMess.SetActive(false);
+        if (bedObject != null) bedObject.SetActive(true);
 
         AudioManager.Instance?.PlayCleaningSound();
 
@@ -150,7 +163,6 @@ public class PatientController : MonoBehaviour
 
     private IEnumerator MovePatient(Transform target)
     {
-
         if (target == null || patient == null)
             yield break;
         PatientAnimationController.Instance.SetWalk();

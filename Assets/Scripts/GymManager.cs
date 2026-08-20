@@ -50,6 +50,10 @@ public class GymManager : MonoBehaviour
         _treadmillCleaned = _bicepCleaned = _patientLeaving = false;
 
         CafePatientController.Instance?.HidePostCafeHeadUI();
+
+        // Hide the post-shower head UI now that the gym phase has begun.
+        ShowerManager.Instance?.HidePostShowerHeadUI();
+
         Show(gymFinalRecoveryHeader, true);
         PlayableSequenceManager.Instance?.HideQuestText();
 

@@ -18,7 +18,6 @@ public class PlayableSequenceManager : MonoBehaviour
     }
 
     [Header("Headers")]
-    [SerializeField] private GameObject headerHelpHimRecover;
     [SerializeField] private GameObject headerKitchenFeedHim;
     [SerializeField] private GameObject headerHeNeedsShower;
     [SerializeField] private GameObject headerGymFinalRecovery;
@@ -69,7 +68,6 @@ public class PlayableSequenceManager : MonoBehaviour
 
     public void ActivateHeader(GameObject activeHeader)
     {
-        if (headerHelpHimRecover   != null) headerHelpHimRecover  .SetActive(headerHelpHimRecover   == activeHeader);
         if (headerKitchenFeedHim   != null) headerKitchenFeedHim  .SetActive(headerKitchenFeedHim   == activeHeader);
         if (headerHeNeedsShower    != null) headerHeNeedsShower   .SetActive(headerHeNeedsShower    == activeHeader);
         if (headerGymFinalRecovery != null) headerGymFinalRecovery.SetActive(headerGymFinalRecovery == activeHeader);

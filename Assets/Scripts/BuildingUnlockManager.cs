@@ -84,7 +84,7 @@ public class BuildingUnlockManager : MonoBehaviour
 
     private void Start()
     {
-        if (unlockCostText != null) unlockCostText.text = "$" + unlockCost;
+        if (unlockCostText != null) unlockCostText.text = string.Format("${0}", unlockCost);
         if (fillImage != null) fillImage.fillAmount = 0f;
     }
     private void InitSharedCashPool()
@@ -214,7 +214,7 @@ public class BuildingUnlockManager : MonoBehaviour
         int remaining = Mathf.Max(0, unlockCost - drained);
         if (remaining == _lastDisplayedRemaining) return;
         _lastDisplayedRemaining = remaining;
-        if (unlockCostText != null) unlockCostText.text = "$" + remaining;
+        if (unlockCostText != null) unlockCostText.text = string.Format("${0}", remaining);
     }
 
     private void UnlockBuilding()

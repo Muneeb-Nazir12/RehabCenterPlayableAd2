@@ -1,5 +1,5 @@
 using UnityEngine;
-
+ 
 public class ShowerTowelDeliveryTrigger : MonoBehaviour
 {
     [SerializeField] private GameObject player;

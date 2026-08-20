@@ -48,7 +48,12 @@ public class ShowerManager : MonoBehaviour
     [SerializeField] private GameObject nextBuildingUnlockPoint;
 
     [Header("Patient Head UI — Shower")]
+    [Tooltip("Shown while the patient walks to the shower. Hidden once the patient is inside showering.")]
     [SerializeField] private GameObject showerHeadUI;
+
+    [Header("Patient Head UI — Post Shower")]
+    [Tooltip("Shown once the patient has finished showering and is idle, waiting for the gym to be unlocked.")]
+    [SerializeField] private GameObject postShowerHeadUI;
 
     public bool IsTowelPickedUp { get; private set; }
     public bool IsShowerCompleted { get; private set; }
@@ -106,7 +111,19 @@ public class ShowerManager : MonoBehaviour
 
         PatientAnimationController.Instance?.SetIdle();
 
+        // Patient has exited the shower and is idle — show the post-shower head UI
+        // so the player knows the patient is waiting for the gym to be unlocked.
+        if (postShowerHeadUI != null) postShowerHeadUI.SetActive(true);
+
         if (nextBuildingUnlockPoint != null) nextBuildingUnlockPoint.SetActive(true);
+    }
+
+    /// <summary>
+    /// Called by GymManager when the gym is unlocked, hiding the post-shower head UI.
+    /// </summary>
+    public void HidePostShowerHeadUI()
+    {
+        if (postShowerHeadUI != null) postShowerHeadUI.SetActive(false);
     }
 
     public void OnTowelPickedUp()
@@ -115,7 +132,6 @@ public class ShowerManager : MonoBehaviour
         IsTowelPickedUp = true;
 
         if (playerHandTowel != null) playerHandTowel.SetActive(true);
-
         if (towelPickupGreenCircle != null) towelPickupGreenCircle.SetActive(false);
         if (towelPickupTriggerObject != null) towelPickupTriggerObject.SetActive(false);
 

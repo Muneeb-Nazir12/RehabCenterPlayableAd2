@@ -36,6 +36,7 @@ public class RoomManager : MonoBehaviour
 
     // FIX: prevent double-trigger if player re-enters before cleaning finishes
     private bool _cleaningInProgress;
+    private static readonly WaitForSeconds WaitCleaningDelay = new WaitForSeconds(0.2f);
 
     private void Awake()
     {
@@ -76,7 +77,7 @@ public class RoomManager : MonoBehaviour
         }
 
         if (cleaningFillImage != null) cleaningFillImage.fillAmount = 1f;
-        yield return new WaitForSeconds(0.2f);
+        yield return WaitCleaningDelay;
 
         if (mob        != null) mob.SetActive(false);
         if (cleaningUI != null) cleaningUI.SetActive(false);

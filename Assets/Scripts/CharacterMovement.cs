@@ -1,19 +1,7 @@
 using UnityEngine;
-
-/// <summary>
-/// Player movement controller.
-/// Optimized for Luna playable ads (target: 2-3 ms per frame).
-/// — No per-frame allocations
-/// — Cached Rigidbody, sqrMagnitude threshold precomputed
-/// — No Vector3/Quaternion heap objects in hot path
-/// — FixedUpdate only (no Update polling)
-/// — Physics-based movement with velocity change (no drag fight)
-/// </summary>
-[RequireComponent(typeof(Rigidbody))]
 public class CharacterMovement : MonoBehaviour
 {
     public static CharacterMovement Instance;
-
     [Header("Input")]
     public PlayableDynamicJoystick joystick;
     public CameraFollower          playerCamera;
@@ -25,16 +13,11 @@ public class CharacterMovement : MonoBehaviour
 
     [Header("Misc")]
     [SerializeField] private float movementThreshold = 0.01f;
-    [SerializeField] private FootstepParticleController _footstep;
 
     public bool IsMoving { get; private set; }
-
-    // Cached components / precomputed values
     private Rigidbody _rb;
     private float     _moveSqrThreshold;
-    private float     _rotSpeedDeg;          // rotationSpeed × 50 (RotateTowards expects degrees)
-
-    // Reused structs — avoids creating new Vector3s on heap each FixedUpdate
+    private float     _rotSpeedDeg;          
     private Vector3 _inputDir;
     private Vector3 _targetVel;
     private Vector3 _velDiff;
@@ -70,13 +53,11 @@ public class CharacterMovement : MonoBehaviour
         {
             if (sqr > 0.01f)
             {
-                // Normalize inline — no Mathf.Sqrt heap call, uses reciprocal
                 float invMag = 1f / Mathf.Sqrt(sqr);
                 _inputDir.x = h * invMag;
                 _inputDir.y = 0f;
                 _inputDir.z = v * invMag;
 
-                // Velocity change — no drag, instant response
                 _targetVel.x = _inputDir.x * moveSpeed;
                 _targetVel.y = 0f;
                 _targetVel.z = _inputDir.z * moveSpeed;
@@ -89,7 +70,6 @@ public class CharacterMovement : MonoBehaviour
                 if (_velDiff.x * _velDiff.x + _velDiff.z * _velDiff.z > 0.0001f)
                     _rb.AddForce(_velDiff, ForceMode.VelocityChange);
 
-                // Rotation
                 _rb.MoveRotation(Quaternion.RotateTowards(
                     _rb.rotation,
                     Quaternion.LookRotation(_inputDir),

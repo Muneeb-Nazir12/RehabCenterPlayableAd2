@@ -40,9 +40,6 @@ public class GymCleaningTrigger : MonoBehaviour
     {
         _invDuration = cleaningDuration > 0f ? 1f / cleaningDuration : 2f;
         if (fillImage != null) fillImage.fillAmount = 0f;
-
-        // VFX starts hidden
-        if (cleaningCompleteVFX != null) cleaningCompleteVFX.SetActive(false);
     }
 
     private void Update()
