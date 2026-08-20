@@ -20,19 +20,22 @@ public class RoomManager : MonoBehaviour
 
     [Header("Cash Bundle")]
     [SerializeField] private CashBundle cashBundle;
-    [SerializeField] private Transform cashBundleArrowTarget;
+    [SerializeField] private Transform  cashBundleArrowTarget;
 
     [Header("Next Unlock Point")]
     [SerializeField] private GameObject nextUnlockPointObject;
-    [SerializeField] private Transform nextUnlockPointArrowTarget;
+    [SerializeField] private Transform  nextUnlockPointArrowTarget;
 
     [Header("Player")]
-    [SerializeField] private CharacterMovement characterMovement;
+    [SerializeField] private CharacterMovement       characterMovement;
     [SerializeField] private PlayerAnimationController playerAnim;
     [SerializeField] private GameObject mob;
 
     public Transform BedCleaningPoint => bedCleaningPoint;
     public bool BedCleaned { get; private set; }
+
+    // FIX: prevent double-trigger if player re-enters before cleaning finishes
+    private bool _cleaningInProgress;
 
     private void Awake()
     {
@@ -42,7 +45,15 @@ public class RoomManager : MonoBehaviour
 
     public void OnBuildingUnlocked() { }
 
-    public void BeginCleaning() => StartCoroutine(CleaningSequence());
+    public void BeginCleaning()
+    {
+        // FIX: only start if bed is actually messy and not already cleaning
+        if (BedCleaned || _cleaningInProgress) return;
+        if (PatientController.Instance == null || !PatientController.Instance.IsBedMessy) return;
+
+        _cleaningInProgress = true;
+        StartCoroutine(CleaningSequence());
+    }
 
     private IEnumerator CleaningSequence()
     {
@@ -53,8 +64,8 @@ public class RoomManager : MonoBehaviour
         if (cleaningUI != null) cleaningUI.SetActive(true);
         if (cleaningFillImage != null) cleaningFillImage.fillAmount = 0f;
 
-        float elapsed  = 0f;
-        float invDur   = cleaningDuration > 0f ? 1f / cleaningDuration : 2f;
+        float elapsed = 0f;
+        float invDur  = cleaningDuration > 0f ? 1f / cleaningDuration : 2f;
 
         while (elapsed < cleaningDuration)
         {
@@ -73,17 +84,21 @@ public class RoomManager : MonoBehaviour
         if (cleaningVFX1 != null) cleaningVFX1.SetActive(true);
         if (cleaningVFX2 != null) cleaningVFX2.SetActive(true);
 
-        if (AudioManager.Instance != null) AudioManager.Instance.PlayUnlockSound();
+        // FIX: play cleaning completion sound
+        AudioManager.Instance?.PlayCleaningSound();
+        AudioManager.Instance?.PlayUnlockSound();
 
         if (playerAnim        != null) playerAnim.StopCleaningState();
         if (characterMovement != null) characterMovement.canMove = true;
 
         BedCleaned = true;
-        if (PatientController.Instance != null) PatientController.Instance.OnBedCleaned();
+        _cleaningInProgress = false;
+
+        PatientController.Instance?.OnBedCleaned();
 
         yield return null;
 
-        if (cashBundle != null) cashBundle.Activate();
+        cashBundle?.Activate();
         if (ArrowManager.Instance != null && cashBundleArrowTarget != null)
             ArrowManager.Instance.PointArrowTowards(cashBundleArrowTarget);
 
@@ -95,10 +110,7 @@ public class RoomManager : MonoBehaviour
         if (ArrowManager.Instance != null && nextUnlockPointArrowTarget != null)
             ArrowManager.Instance.PointArrowTowards(nextUnlockPointArrowTarget);
 
-        if (PlayableSequenceManager.Instance != null)
-            PlayableSequenceManager.Instance.ShowQuestText("Unlock Cafe");
-
-        if (PatientController.Instance != null)
-            PatientController.Instance.OnCashCollected();
+        PlayableSequenceManager.Instance?.ShowQuestText("Unlock Cafe");
+        PatientController.Instance?.OnCashCollected();
     }
 }

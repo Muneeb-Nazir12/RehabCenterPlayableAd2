@@ -12,6 +12,7 @@ public class PatientController : MonoBehaviour
 
     [Header("Path Points — Room Lobby")]
     [SerializeField] private Transform patientStandingPointBeforeRoomEnter;
+    [SerializeField] private Transform patientStandingPointBeforeRoomEnter1;
 
     [Header("Path Points — To Bed")]
     [SerializeField] private Transform patientMovingTowardsBedPoint1;
@@ -42,20 +43,32 @@ public class PatientController : MonoBehaviour
     [Header("Cash")]
     [SerializeField] private GameObject cashBundleObject;
 
+    [Header("Patient Head UI — Post-bed")]
+    [SerializeField] private GameObject postBedHeadUI;
+
     private const float SleepDuration = 1.5f;
 
-    private void Awake() => Instance = this;
+    private static readonly Quaternion Rot_0_Neg90_0 = Quaternion.Euler(0f, -90f, 0f);
+
+    public static bool IsFlowComplete { get; private set; } = false;
+    public bool IsBedMessy            { get; private set; } = false;
+
+    private void Awake()
+    {
+        Instance = this;
+        IsFlowComplete = false;
+        IsBedMessy = false;
+    }
+
     private void Start() => StartCoroutine(PatientFlow());
 
     private IEnumerator PatientFlow()
     {
         PlayableSequenceManager.Instance?.ShowQuestText("Unlock the room");
-        if (ArrowManager.Instance != null && lobbyArrowTarget != null)
-            ArrowManager.Instance.PointArrowTowards(lobbyArrowTarget);
+        ArrowManager.Instance?.PointArrowTowards(lobbyArrowTarget);
 
         yield return MovePatient(patientStandingPointBeforeRoomEnter);
-
-        SnapRotationTowards(patientMovingTowardsBedPoint1);
+        yield return MovePatient(patientStandingPointBeforeRoomEnter1);
         PatientAnimationController.Instance?.SetIdle();
 
         ArrowManager.Instance?.PointArrowTowards(buildingUnlockArrowTarget);
@@ -63,60 +76,59 @@ public class PatientController : MonoBehaviour
         yield return new WaitUntil(() => BuildingUnlockManager.buildingUnlockCount >= 1);
 
         PlayableSequenceManager.Instance?.HideQuestText();
-
         ArrowManager.Instance?.PointArrowTowards(bedArrowTarget);
         PlayableSequenceManager.Instance?.ShowQuestText("See patient taking rest");
 
         yield return MovePatient(patientMovingTowardsBedPoint1);
         yield return MovePatient(patientMovingTowardsBedPoint2);
 
-        patient.position = patientLayingDownPoint.position;
-        patient.rotation = Quaternion.Euler(0f, -90f, 0f);
+        Quaternion layRot = Rot_0_Neg90_0;
+        patient.SetPositionAndRotation(patientLayingDownPoint.position, layRot);
         PatientAnimationController.Instance?.SetLayDown();
 
         if (sleepingVFX != null) sleepingVFX.SetActive(true);
 
         float elapsed = 0f;
         Vector3 layPos = patientLayingDownPoint.position;
-        Quaternion layRot = Quaternion.Euler(0f, -90f, 0f);
         while (elapsed < SleepDuration)
         {
-            patient.position = layPos;
-            patient.rotation = layRot;
+            patient.SetPositionAndRotation(layPos, layRot);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
         if (sleepingVFX != null) sleepingVFX.SetActive(false);
 
-        if (bedObject != null) bedObject.SetActive(false);
-        if (bedMess != null) bedMess.SetActive(true);
+        if (bedObject   != null) bedObject.SetActive(false);
+        if (bedMess     != null) bedMess.SetActive(true);
         if (bedDirtyVFX != null) bedDirtyVFX.SetActive(true);
+
+        IsBedMessy = true;
 
         PlayableSequenceManager.Instance?.ShowQuestText("Clean the bed");
         ArrowManager.Instance?.PointArrowTowards(bedMessArrowTarget);
 
-        // Teleport to point1 first, THEN snap rotation toward point2
-        // so the patient faces the correct direction before walking starts
-        patient.transform.position = patientAfterSleepPoint1.position;
-        SnapRotationTowards(patientAfterSleepPoint2);
+        patient.position = patientAfterSleepPoint1.position;
 
         yield return MovePatient(patientAfterSleepPoint2);
-
-        // Snap toward point3 before final move
-        SnapRotationTowards(patientAfterSleepPoint3);
         yield return MovePatient(patientAfterSleepPoint3);
 
-        // Face correct idle direction at final rest position
-        SnapRotationTowards(patientAfterSleepPoint3);
         PatientAnimationController.Instance?.SetIdle();
+
+        if (postBedHeadUI != null) postBedHeadUI.SetActive(true);
+
+        IsFlowComplete = true;
     }
 
     public void OnBedCleaned()
     {
+        IsBedMessy = false;
+
         if (bedDirtyVFX != null) bedDirtyVFX.SetActive(false);
-        if (bedMess != null) bedMess.SetActive(false);
-        if (bedObject != null) bedObject.SetActive(true);
+        if (bedMess     != null) bedMess.SetActive(false);
+        if (bedObject   != null) bedObject.SetActive(true);
+
+        AudioManager.Instance?.PlayCleaningSound();
 
         if (cashBundleObject != null) cashBundleObject.SetActive(true);
 
@@ -128,47 +140,44 @@ public class PatientController : MonoBehaviour
     {
         PlayableSequenceManager.Instance?.ShowQuestText("Unlock Cafe");
         ArrowManager.Instance?.PointArrowTowards(cafeUnlockArrowTarget);
+        if (postBedHeadUI != null) postBedHeadUI.SetActive(false);
     }
 
-    private void ForceRotation(float x, float y, float z)
+    public void HidePostBedHeadUI()
     {
-        if (patient == null) return;
-        patient.rotation = Quaternion.Euler(x, y, z);
-    }
-
-    private void SnapRotationTowards(Transform target)
-    {
-        if (patient == null || target == null) return;
-        Vector3 dir = target.position - patient.position;
-        dir.y = 0f;
-        if (dir.sqrMagnitude < 0.0001f) return;
-        patient.rotation = Quaternion.LookRotation(dir.normalized);
+        if (postBedHeadUI != null) postBedHeadUI.SetActive(false);
     }
 
     private IEnumerator MovePatient(Transform target)
     {
-        if (target == null || patient == null) yield break;
 
-        PatientAnimationController.Instance?.SetWalk();
-
-        Vector3 targetPos = target.position;
+        if (target == null || patient == null)
+            yield break;
+        PatientAnimationController.Instance.SetWalk();
         while (true)
         {
-            Vector3 diff = targetPos - patient.position;
+            Vector3 diff = target.position - patient.position;
             diff.y = 0f;
-            if (diff.sqrMagnitude <= 0.01f) break;
+
+            if (diff.sqrMagnitude <= 0.01f)
+            {
+                patient.position = target.position;
+                yield break;
+            }
 
             patient.position = Vector3.MoveTowards(
-                patient.position, targetPos, moveSpeed * Time.deltaTime);
+                patient.position,
+                target.position,
+                moveSpeed * Time.unscaledDeltaTime
+            );
 
-            if (diff.sqrMagnitude > 0.0001f)
-                patient.rotation = Quaternion.Slerp(
-                    patient.rotation,
-                    Quaternion.LookRotation(diff),
-                    rotationSpeed * Time.deltaTime);
+            patient.rotation = Quaternion.Slerp(
+                patient.rotation,
+                Quaternion.LookRotation(diff),
+                rotationSpeed * Time.unscaledDeltaTime
+            );
 
             yield return null;
         }
-        patient.position = targetPos;
     }
 }

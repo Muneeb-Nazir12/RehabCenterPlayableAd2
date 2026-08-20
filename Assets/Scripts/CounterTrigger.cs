@@ -46,9 +46,9 @@ public class CounterTrigger : MonoBehaviour
         if (_elapsed >= serviceDuration)
         {
             _served = true;
-            if (fillImage != null) fillImage.fillAmount = 1f;
+            if (fillImage != null) fillImage.fillAmount = 0f;
             if (greenCircle != null) greenCircle.SetActive(false);
-            if (whiteCircle != null) whiteCircle.SetActive(false);
+            if (whiteCircle != null) whiteCircle.SetActive(true);
             if (ArrowManager.Instance != null) ArrowManager.Instance.HideArrow();
             if (CafeManager.Instance != null) CafeManager.Instance.OnPlayerServedCounter();
         }
