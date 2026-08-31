@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Rehab Centre Playable Ad/Ad 2/Scene/Rehab Centre Playable Ad 2.unity
+    path: Assets/Rehab_Centre_Playable_Ad/Ad2/Scene/Rehab Centre Playable Ad 2.unity
     guid: fe7335d475dc1714ab77c4acafe2df41
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 289c1b55c9541489481df5cc06664110, type: 3}

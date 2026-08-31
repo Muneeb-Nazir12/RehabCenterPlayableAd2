@@ -4,8 +4,8 @@ public class DoorOpen : MonoBehaviour
 {
     public GameObject doorObject;
     public float rotationAngle = -90f;
-    public Collider doorObjectCollider;
 
+    private Transform _doorTransform;
     private Quaternion _closedLocalRotation;
     private Quaternion _openLocalRotation;
     private int _peopleInZone;
@@ -14,7 +14,8 @@ public class DoorOpen : MonoBehaviour
     {
         if (doorObject != null)
         {
-            _closedLocalRotation = doorObject.transform.localRotation;
+            _doorTransform = doorObject.transform;
+            _closedLocalRotation = _doorTransform.localRotation;
             _openLocalRotation = _closedLocalRotation * Quaternion.Euler(0f, rotationAngle, 0f);
         }
     }
@@ -22,20 +23,18 @@ public class DoorOpen : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         _peopleInZone++;
-        if (_peopleInZone == 1 && doorObject != null)
+        if (_peopleInZone == 1 && _doorTransform != null)
         {
-            doorObject.transform.localRotation = _openLocalRotation;
-            if (doorObjectCollider != null) doorObjectCollider.enabled = false;
+            _doorTransform.localRotation = _openLocalRotation;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         _peopleInZone = Mathf.Max(0, _peopleInZone - 1);
-        if (_peopleInZone == 0 && doorObject != null)
+        if (_peopleInZone == 0 && _doorTransform != null)
         {
-            doorObject.transform.localRotation = _closedLocalRotation;
-            if (doorObjectCollider != null) doorObjectCollider.enabled = true;
+            _doorTransform.localRotation = _closedLocalRotation;
         }
     }
 }

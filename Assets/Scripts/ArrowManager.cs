@@ -15,8 +15,6 @@ public class ArrowManager : MonoBehaviour
     private Transform _trackedTarget;
     private bool _isVisible;
 
-    private static readonly Vector3 Up = Vector3.up;
-
     private void Awake()
     {
         Instance = this;
@@ -26,20 +24,35 @@ public class ArrowManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (!_isVisible || _trackedTarget == null || playerTransform == null || _arrowTransform == null) return;
+        if (!_isVisible || _trackedTarget == null || playerTransform == null || _arrowTransform == null)
+        {
+            enabled = false;
+            return;
+        }
 
+        UpdateArrowTransform();
+    }
+
+    private void UpdateArrowTransform()
+    {
         Vector3 playerPos = playerTransform.position;
-        Vector3 direction = _trackedTarget.position - playerPos;
-        direction.y = 0f;
+        Vector3 targetPos = _trackedTarget.position;
 
-        float sqrMag = direction.sqrMagnitude;
+        float diffX = targetPos.x - playerPos.x;
+        float diffZ = targetPos.z - playerPos.z;
+        float sqrMag = diffX * diffX + diffZ * diffZ;
         if (sqrMag < 0.001f) return;
 
         float invMag = 1f / Mathf.Sqrt(sqrMag);
-        Vector3 dir = direction * invMag;
-        float yAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+        float dirX = diffX * invMag;
+        float dirZ = diffZ * invMag;
+        float yAngle = Mathf.Atan2(dirX, dirZ) * Mathf.Rad2Deg;
 
-        _arrowTransform.position = playerPos + dir * distanceFromPlayer + Up * heightOffset;
+        _arrowTransform.position = new Vector3(
+            playerPos.x + dirX * distanceFromPlayer,
+            playerPos.y + heightOffset,
+            playerPos.z + dirZ * distanceFromPlayer);
+
         _arrowTransform.rotation = Quaternion.Euler(90f, yAngle + modelRotationOffsetY, 180f);
     }
 
@@ -48,14 +61,19 @@ public class ArrowManager : MonoBehaviour
         if (target == null) return;
         _trackedTarget = target;
         _isVisible = true;
+        enabled = true;
         if (arrowObject != null && !arrowObject.activeSelf) arrowObject.SetActive(true);
-        if (arrowRenderer != null) arrowRenderer.enabled = true;
+        if (arrowRenderer != null && !arrowRenderer.enabled) arrowRenderer.enabled = true;
+        if (_arrowTransform != null && playerTransform != null)
+            UpdateArrowTransform();
     }
 
     public void HideArrow()
     {
         _isVisible = false;
         _trackedTarget = null;
-        if (arrowRenderer != null) arrowRenderer.enabled = false;
+        enabled = false;
+        if (arrowRenderer != null && arrowRenderer.enabled) arrowRenderer.enabled = false;
+        if (arrowObject != null && arrowObject.activeSelf) arrowObject.SetActive(false);
     }
 }

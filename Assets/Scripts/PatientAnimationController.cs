@@ -8,7 +8,21 @@ public class PatientAnimationController : MonoBehaviour
 
     private static readonly int AnimStat = Animator.StringToHash("AnimStat");
 
-    private void Awake() => Instance = this;
+    private int _currentAnimStat = -1;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    public void ResetAnimator()
+    {
+        if (animator == null) return;
+        animator.Rebind();
+        animator.Update(0f);
+        _currentAnimStat = -1;
+        SetIdle();
+    }
 
     public void SetIdle() => Set(0);
     public void SetWalk() => Set(1);
@@ -21,7 +35,8 @@ public class PatientAnimationController : MonoBehaviour
 
     private void Set(int value)
     {
-        if (animator == null) return;
+        if (animator == null || _currentAnimStat == value) return;
+        _currentAnimStat = value;
         animator.SetInteger(AnimStat, value);
     }
 }

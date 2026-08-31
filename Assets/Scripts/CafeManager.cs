@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class CafeManager : MonoBehaviour
 {
@@ -12,8 +11,9 @@ public class CafeManager : MonoBehaviour
     [SerializeField] private Transform cashArrowTarget;
 
     [Header("Next Unlock")]
-    [SerializeField] private GameObject nextUnlockPointObject;
-    [SerializeField] private Transform nextUnlockArrowTarget;
+    [SerializeField] private GameObject washroomUnlockPointObject;
+    [SerializeField] private GameObject washroomUnlockPointCanvas;
+    [SerializeField] private Transform washRoomUnlockArrowTarget;
 
     [Header("Reception Serving UI")]
     [SerializeField] private GameObject receptionServingPanel;
@@ -25,53 +25,46 @@ public class CafeManager : MonoBehaviour
     public void OnCafeUnlocked()
     {
         CounterServed = false;
-
         if (receptionServingPanel != null) receptionServingPanel.SetActive(true);
-
         if (PlayableSequenceManager.Instance != null)
-            PlayableSequenceManager.Instance.ActivateHeader(
-                PlayableSequenceManager.Instance.GetHeaderKitchen());
-
-        if (ArrowManager.Instance != null && counterArrowTarget != null)
-            ArrowManager.Instance.PointArrowTowards(counterArrowTarget);
-
-        CafePatientController.Instance.StartPatientFlow();
+        {
+            PlayableSequenceManager.Instance.HideQuestText();
+            PlayableSequenceManager.Instance.ShowKitchenFeedHim();
+        }
+        TargetArrowIndicator.GoToTarget(4);
+        if (ArrowManager.Instance != null) ArrowManager.Instance.PointArrowTowards(counterArrowTarget);
+        if (CafePatientController.Instance != null) CafePatientController.Instance.StartPatientFlow();
     }
 
     public void OnPlayerServedCounter()
     {
+        TargetArrowIndicator.Hide(4);
         CounterServed = true;
-
-        if (PlayableSequenceManager.Instance != null)
-            PlayableSequenceManager.Instance.ActivateHeader(null);
-
-        if (PlayableSequenceManager.Instance != null)
-            PlayableSequenceManager.Instance.ShowQuestText("Wait for patient eat food");
     }
 
     public void OnTableBecameDirty()
     {
         if (PlayableSequenceManager.Instance != null)
+        {
+            PlayableSequenceManager.Instance.HideKitchenFeedHim();
             PlayableSequenceManager.Instance.ShowQuestText("Clean the table");
+        }
+        TargetArrowIndicator.GoToTarget(8);
     }
 
     public void OnTableCleaned()
     {
-        if (ArrowManager.Instance != null && cashArrowTarget != null)
-            ArrowManager.Instance.PointArrowTowards(cashArrowTarget);
-
-        if (PlayableSequenceManager.Instance != null)
-            PlayableSequenceManager.Instance.ShowQuestText("Pick up cash");
+        if (ArrowManager.Instance != null) ArrowManager.Instance.PointArrowTowards(cashArrowTarget);
+        if (PlayableSequenceManager.Instance != null) PlayableSequenceManager.Instance.ShowQuestText("Pick up cash");
     }
 
     public void OnCashCollected()
     {
-        if (nextUnlockPointObject != null) nextUnlockPointObject.SetActive(true);
+        if (washroomUnlockPointObject != null) washroomUnlockPointObject.SetActive(true);
+        if (washroomUnlockPointCanvas != null) washroomUnlockPointCanvas.SetActive(true);
 
-        if (ArrowManager.Instance != null && nextUnlockArrowTarget != null)
-            ArrowManager.Instance.PointArrowTowards(nextUnlockArrowTarget);
-
-        if (PlayableSequenceManager.Instance != null)
-            PlayableSequenceManager.Instance.ShowQuestText("Unlock Shower");
+        TargetArrowIndicator.GoToTarget(5);
+        if (ArrowManager.Instance != null) ArrowManager.Instance.PointArrowTowards(washRoomUnlockArrowTarget);
+        if (PlayableSequenceManager.Instance != null) PlayableSequenceManager.Instance.ShowQuestText("Unlock Shower");
     }
 }

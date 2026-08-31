@@ -5,13 +5,12 @@ using UnityEngine.UI;
 
 public class PlayableDynamicJoystick : MonoBehaviour
 {
+    public static PlayableDynamicJoystick Instance;
     public float deadZone = 0f;
     public float handleRange = 1f;
     public RectTransform background;
     public RectTransform joystickHandle;
     public AxisOptions axisOptions;
-    public float maxRadius = 10f;
-
     public bool invertHorizontal = false;
     public bool invertVertical = false;
 
@@ -32,17 +31,20 @@ public class PlayableDynamicJoystick : MonoBehaviour
     private Image _handleImage;
 
     private PointerEventData _cachedPointerData;
-    private readonly List<RaycastResult> _cachedRaycastResults = new List<RaycastResult>();
+    private readonly List<RaycastResult> _cachedRaycastResults = new List<RaycastResult>(8);
 
     private bool _isPointerDown;
     private bool _checkUIOverlap = false;
+    private float _currentAlpha = -1f;
+
+    private Vector2 _radius;
+    private float _invScaleRadiusX;
+    private float _invScaleRadiusY;
 
     private const float AlphaUp = 0.5f;
     private const float AlphaDown = 1.0f;
 
     public void OnGameEnd() => _checkUIOverlap = true;
-
-    public static PlayableDynamicJoystick Instance { get; private set; }
 
     private void Awake()
     {
@@ -55,23 +57,38 @@ public class PlayableDynamicJoystick : MonoBehaviour
         _canvas = GetComponentInParent<Canvas>();
 
         Vector2 center = new Vector2(0.5f, 0.5f);
-        background.pivot = center;
-        joystickHandle.anchorMin = center;
-        joystickHandle.anchorMax = center;
-        joystickHandle.pivot = center;
-        joystickHandle.anchoredPosition = Vector2.zero;
+        if (background != null) background.pivot = center;
+        if (joystickHandle != null)
+        {
+            joystickHandle.anchorMin = center;
+            joystickHandle.anchorMax = center;
+            joystickHandle.pivot = center;
+            joystickHandle.anchoredPosition = Vector2.zero;
+        }
 
-        _cam = _canvas.renderMode == RenderMode.ScreenSpaceCamera
-            ? (_canvas.worldCamera != null ? _canvas.worldCamera : Camera.main)
-            : null;
+        if (_canvas != null)
+        {
+            _cam = _canvas.renderMode == RenderMode.ScreenSpaceCamera
+                ? (_canvas.worldCamera != null ? _canvas.worldCamera : Camera.main)
+                : null;
+        }
 
-        _backgroundImage = background.GetComponent<Image>();
-        _handleImage = background.childCount > 0
-            ? background.GetChild(0).GetComponent<Image>()
-            : null;
+        if (background != null)
+        {
+            _backgroundImage = background.GetComponent<Image>();
+            _handleImage = background.childCount > 0
+                ? background.GetChild(0).GetComponent<Image>()
+                : null;
+            _fixedPosition = background.anchoredPosition;
+            _radius = background.sizeDelta * 0.5f;
+            float scale = _canvas != null ? _canvas.scaleFactor : 1f;
+            _invScaleRadiusX = _radius.x * scale > 0f ? 1f / (_radius.x * scale) : 1f;
+            _invScaleRadiusY = _radius.y * scale > 0f ? 1f / (_radius.y * scale) : 1f;
+        }
 
-        _cachedPointerData = new PointerEventData(EventSystem.current);
-        _fixedPosition = background.anchoredPosition;
+        if (EventSystem.current != null)
+            _cachedPointerData = new PointerEventData(EventSystem.current);
+
         SetBackgroundAlpha(AlphaUp);
     }
 
@@ -79,14 +96,15 @@ public class PlayableDynamicJoystick : MonoBehaviour
     {
         if (!_isPointerDown && _checkUIOverlap && IsPointerOverUI()) return;
 
-        if (Input.GetMouseButtonDown(0)) OnMouseDown(Input.mousePosition);
-        else if (Input.GetMouseButton(0) && _isPointerDown) OnDrag(Input.mousePosition);
-        else if (Input.GetMouseButtonUp(0) && _isPointerDown) OnMouseUp(Input.mousePosition);
+        if (Input.GetMouseButtonDown(0)) HandlePointerDown(Input.mousePosition);
+        else if (Input.GetMouseButton(0) && _isPointerDown) HandlePointerDrag(Input.mousePosition);
+        else if (Input.GetMouseButtonUp(0) && _isPointerDown) HandlePointerUp();
     }
 
     private bool IsPointerOverUI()
     {
         if (EventSystem.current == null) return false;
+        if (_cachedPointerData == null) _cachedPointerData = new PointerEventData(EventSystem.current);
         _cachedPointerData.position = Input.mousePosition;
         _cachedRaycastResults.Clear();
         EventSystem.current.RaycastAll(_cachedPointerData, _cachedRaycastResults);
@@ -98,30 +116,45 @@ public class PlayableDynamicJoystick : MonoBehaviour
 
     private Vector2 _bgScreenPos;
 
-    private void OnDrag(Vector2 mousePosition)
+    private void HandlePointerDrag(Vector2 mousePosition)
     {
-        Vector2 radius = background.sizeDelta * 0.5f;
-        _input = (mousePosition - _bgScreenPos) / (radius * _canvas.scaleFactor);
+        float inX = (mousePosition.x - _bgScreenPos.x) * _invScaleRadiusX;
+        float inY = (mousePosition.y - _bgScreenPos.y) * _invScaleRadiusY;
+        _input = new Vector2(inX, inY);
+
         FormatInput();
-        HandleInput(_input.magnitude, _input.normalized);
-        joystickHandle.anchoredPosition = _input * radius * handleRange;
+        float mag = _input.magnitude;
+        if (mag > deadZone)
+        {
+            if (mag > 1f) _input /= mag;
+        }
+        else
+        {
+            _input = Vector2.zero;
+        }
+
+        if (joystickHandle != null)
+            joystickHandle.anchoredPosition = new Vector2(_input.x * _radius.x * handleRange, _input.y * _radius.y * handleRange);
     }
 
-    private void OnMouseDown(Vector2 mousePosition)
+    private void HandlePointerDown(Vector2 mousePosition)
     {
         _isPointerDown = true;
         _input = Vector2.zero;
-        background.anchoredPosition = ScreenPointToAnchoredPosition(mousePosition);
-        _bgScreenPos = RectTransformUtility.WorldToScreenPoint(_cam, background.position);
+        if (background != null)
+        {
+            background.anchoredPosition = ScreenPointToAnchoredPosition(mousePosition);
+            _bgScreenPos = RectTransformUtility.WorldToScreenPoint(_cam, background.position);
+        }
         SetBackgroundAlpha(AlphaDown);
-        OnDrag(mousePosition);
+        HandlePointerDrag(mousePosition);
     }
 
-    private void OnMouseUp(Vector2 mousePosition)
+    private void HandlePointerUp()
     {
         _isPointerDown = false;
-        background.anchoredPosition = _fixedPosition;
-        joystickHandle.anchoredPosition = Vector2.zero;
+        if (background != null) background.anchoredPosition = _fixedPosition;
+        if (joystickHandle != null) joystickHandle.anchoredPosition = Vector2.zero;
         _input = Vector2.zero;
         SetBackgroundAlpha(AlphaUp);
     }
@@ -129,6 +162,9 @@ public class PlayableDynamicJoystick : MonoBehaviour
     private void SetBackgroundAlpha(float a)
     {
         a = Mathf.Clamp01(a);
+        if (Mathf.Approximately(_currentAlpha, a)) return;
+        _currentAlpha = a;
+
         if (_backgroundImage != null)
         {
             Color c = _backgroundImage.color; c.a = a; _backgroundImage.color = c;
@@ -145,11 +181,6 @@ public class PlayableDynamicJoystick : MonoBehaviour
             _baseRect, screenPos, _cam, out Vector2 local)
             ? local
             : Vector2.zero;
-    }
-
-    private void HandleInput(float magnitude, Vector2 normalised)
-    {
-        _input = magnitude > deadZone ? (magnitude > 1f ? normalised : _input) : Vector2.zero;
     }
 
     private void FormatInput()

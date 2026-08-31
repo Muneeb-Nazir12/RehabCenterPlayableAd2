@@ -1,0 +1,832 @@
+fileFormatVersion: 2
+guid: 28d27daec3de45d4f8ebf0604c4fd5fe
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_0
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 900
+        width: 108
+        height: 106
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 707606ae5c493b64abbe772a37e090ba
+      internalID: -972098689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_3
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 914
+        width: 301
+        height: 103
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1fb838cd84bace4fbb92e2f1802e824
+      internalID: -1559936259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_4
+      rect:
+        serializedVersion: 2
+        x: 722
+        y: 917
+        width: 300
+        height: 100
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0d83d876da68bed4e9d4f89aaa2d66ef
+      internalID: -1437649039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_7
+      rect:
+        serializedVersion: 2
+        x: 461
+        y: 843
+        width: 70
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7646cab9feb7c6e4381b13078cc5f771
+      internalID: 463490899
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_13
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 721
+        width: 421
+        height: 125
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b0819d174076d62488f1fa5968a4d081
+      internalID: -1439783971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_17
+      rect:
+        serializedVersion: 2
+        x: 919
+        y: 762
+        width: 95
+        height: 103
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b6ffd93987ef24478efa04cc67085ae
+      internalID: 1398816794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_23
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 719
+        width: 58
+        height: 58
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d0cbc6fa436f3a42bc9f79663bbe1c0
+      internalID: 1666848831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_26
+      rect:
+        serializedVersion: 2
+        x: 924
+        y: 670
+        width: 90
+        height: 89
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 04c5588da8120ed4e89502636418d139
+      internalID: 51944218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_27
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 594
+        width: 252
+        height: 110
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 581436ec20a48e14286edda72a1d133f
+      internalID: -1471658237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_56
+      rect:
+        serializedVersion: 2
+        x: 868
+        y: 591
+        width: 149
+        height: 36
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 163e66e5a08fc0a4ab73d30e14af41c5
+      internalID: 623802060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_63
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 537
+        width: 64
+        height: 51
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d191c98ac5b24344ae95caa8d87b34d
+      internalID: 424951544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_65
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 461
+        width: 274
+        height: 111
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9574fc00c34d4d24399798d126701091
+      internalID: -2093646308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_69
+      rect:
+        serializedVersion: 2
+        x: 769
+        y: 266
+        width: 255
+        height: 255
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: faeb24b10514ef245bf2c1b931b7cc75
+      internalID: 1256430633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_70
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 140
+        width: 273
+        height: 107
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9f83961f18c3332429525272006d0356
+      internalID: 322960910
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_71
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 10
+        width: 313
+        height: 111
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4d923e48b41245540a651454bee16195
+      internalID: 1453920876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_72
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 6
+        width: 670
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 715a4e7f05806364f85e03d657df3f1a
+      internalID: -26936955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_1
+      rect:
+        serializedVersion: 2
+        x: 826
+        y: 537
+        width: 77
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ba6fd4560a106743a720c8594619937
+      internalID: 511874038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_5
+      rect:
+        serializedVersion: 2
+        x: 921
+        y: 539
+        width: 39
+        height: 43
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 06e9e066f4af2664bbd8c8f06ca9dd39
+      internalID: -8728002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_6
+      rect:
+        serializedVersion: 2
+        x: 713
+        y: 583
+        width: 80
+        height: 53
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49dcab691cf07274786224bd2c4236c7
+      internalID: -342167284
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_8
+      rect:
+        serializedVersion: 2
+        x: 656
+        y: 597
+        width: 49
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 505b2b86f27115f46ba42660bb590ecd
+      internalID: -1151964261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_9
+      rect:
+        serializedVersion: 2
+        x: 536
+        y: 643
+        width: 96
+        height: 97
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 738ab639493594d43adcff424edd8bc9
+      internalID: -1091577260
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_10
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 744
+        width: 101
+        height: 104
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b9fcd6eeeb8ce114290ecf47d74df6c4
+      internalID: -2107140210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_11
+      rect:
+        serializedVersion: 2
+        x: 641
+        y: 781
+        width: 66
+        height: 67
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 794e0ca1689634e4093844145e323e78
+      internalID: -1052649632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_12
+      rect:
+        serializedVersion: 2
+        x: 793
+        y: 865
+        width: 58
+        height: 41
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 18fcdf64a513b9846b1c13ed47dffa68
+      internalID: -1651685299
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_14
+      rect:
+        serializedVersion: 2
+        x: 898
+        y: 863
+        width: 45
+        height: 46
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eb727c51d04ba8c4eb726e7d6f0dcb22
+      internalID: 1993484587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_15
+      rect:
+        serializedVersion: 2
+        x: 853
+        y: 861
+        width: 46
+        height: 50
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ad081d8bab054db47a104d98952c68cb
+      internalID: -1719002694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_16
+      rect:
+        serializedVersion: 2
+        x: 816
+        y: 765
+        width: 96
+        height: 98
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 67794e1110ccb4540b5aef11033be351
+      internalID: 2004506711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SS1 Playable Rehab Center_18
+      rect:
+        serializedVersion: 2
+        x: 721
+        y: 652
+        width: 82
+        height: 65
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 201527ea80841d443bdb4e17899eb01b
+      internalID: 1282718109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: b8fff169dcf7da64ca155e7e013d2e43
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      SS1 Playable Rehab Center_0: -972098689
+      SS1 Playable Rehab Center_1: 511874038
+      SS1 Playable Rehab Center_10: -2107140210
+      SS1 Playable Rehab Center_11: -1052649632
+      SS1 Playable Rehab Center_12: -1651685299
+      SS1 Playable Rehab Center_13: -1439783971
+      SS1 Playable Rehab Center_14: 1993484587
+      SS1 Playable Rehab Center_15: -1719002694
+      SS1 Playable Rehab Center_16: 2004506711
+      SS1 Playable Rehab Center_17: 1398816794
+      SS1 Playable Rehab Center_18: 1282718109
+      SS1 Playable Rehab Center_19: -1262868760
+      SS1 Playable Rehab Center_2: 1539741031
+      SS1 Playable Rehab Center_20: 1789091688
+      SS1 Playable Rehab Center_21: 1999137415
+      SS1 Playable Rehab Center_22: 655451124
+      SS1 Playable Rehab Center_23: 1666848831
+      SS1 Playable Rehab Center_24: -1585819977
+      SS1 Playable Rehab Center_25: 2107905493
+      SS1 Playable Rehab Center_26: 51944218
+      SS1 Playable Rehab Center_27: -1471658237
+      SS1 Playable Rehab Center_28: 1294040563
+      SS1 Playable Rehab Center_29: 440816943
+      SS1 Playable Rehab Center_3: -1559936259
+      SS1 Playable Rehab Center_30: 1283304898
+      SS1 Playable Rehab Center_31: -226656976
+      SS1 Playable Rehab Center_32: -262433554
+      SS1 Playable Rehab Center_33: 1873919493
+      SS1 Playable Rehab Center_34: 1328060692
+      SS1 Playable Rehab Center_35: 1741217091
+      SS1 Playable Rehab Center_36: -613558897
+      SS1 Playable Rehab Center_37: 1544089188
+      SS1 Playable Rehab Center_38: 662565832
+      SS1 Playable Rehab Center_39: 607558586
+      SS1 Playable Rehab Center_4: -1437649039
+      SS1 Playable Rehab Center_40: -1322392758
+      SS1 Playable Rehab Center_41: -236812756
+      SS1 Playable Rehab Center_42: -6696897
+      SS1 Playable Rehab Center_43: 2102417540
+      SS1 Playable Rehab Center_44: 203501862
+      SS1 Playable Rehab Center_45: -1193071557
+      SS1 Playable Rehab Center_46: -758939975
+      SS1 Playable Rehab Center_47: -386734529
+      SS1 Playable Rehab Center_48: -1433006127
+      SS1 Playable Rehab Center_49: -2134380515
+      SS1 Playable Rehab Center_5: -8728002
+      SS1 Playable Rehab Center_50: -312159101
+      SS1 Playable Rehab Center_51: 1772767200
+      SS1 Playable Rehab Center_52: -144842519
+      SS1 Playable Rehab Center_53: 1430154732
+      SS1 Playable Rehab Center_54: -1214135063
+      SS1 Playable Rehab Center_55: -1059727219
+      SS1 Playable Rehab Center_56: 623802060
+      SS1 Playable Rehab Center_57: 1685936255
+      SS1 Playable Rehab Center_58: -1560806832
+      SS1 Playable Rehab Center_59: -636401455
+      SS1 Playable Rehab Center_6: -342167284
+      SS1 Playable Rehab Center_60: -1833920893
+      SS1 Playable Rehab Center_61: -1730489177
+      SS1 Playable Rehab Center_62: -2125321168
+      SS1 Playable Rehab Center_63: 424951544
+      SS1 Playable Rehab Center_64: 654975907
+      SS1 Playable Rehab Center_65: -2093646308
+      SS1 Playable Rehab Center_66: -1386032703
+      SS1 Playable Rehab Center_67: -1093813024
+      SS1 Playable Rehab Center_68: -189168686
+      SS1 Playable Rehab Center_69: 1256430633
+      SS1 Playable Rehab Center_7: 463490899
+      SS1 Playable Rehab Center_70: 322960910
+      SS1 Playable Rehab Center_71: 1453920876
+      SS1 Playable Rehab Center_72: -26936955
+      SS1 Playable Rehab Center_8: -1151964261
+      SS1 Playable Rehab Center_9: -1091577260
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

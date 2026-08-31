@@ -1,12 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Reusable gym cleaning trigger.
-/// areaId = 0 → Treadmill, 1 → Bicep.
-/// Only activates cleaning when the corresponding mess is active.
-/// Plays a VFX burst on completion.
-/// </summary>
 public class GymCleaningTrigger : MonoBehaviour
 {
     public enum GymArea { Treadmill = 0, Bicep = 1 }
@@ -16,14 +10,14 @@ public class GymCleaningTrigger : MonoBehaviour
 
     [Header("Mess Reference")]
     [SerializeField] private GameObject messObject;
+    [SerializeField] private Transform cleaningVFXPoint;
 
     [Header("Fill UI")]
     [SerializeField] private Image fillImage;
     [SerializeField] private float cleaningDuration = 0.5f;
 
-    // FIX: VFX to play after this area is cleaned
-    [Header("Cleaning Complete VFX")]
-    [SerializeField] private GameObject cleaningCompleteVFX;
+    [Header("Shared Particle")]
+    [SerializeField] private ParticleSystem sharedVFX;
 
     [Header("Player")]
     [SerializeField] private GameObject player;
@@ -40,11 +34,16 @@ public class GymCleaningTrigger : MonoBehaviour
     {
         _invDuration = cleaningDuration > 0f ? 1f / cleaningDuration : 2f;
         if (fillImage != null) fillImage.fillAmount = 0f;
+        enabled = false;
     }
 
     private void Update()
     {
-        if (!_playerInside || _cleaned) return;
+        if (!_playerInside || _cleaned)
+        {
+            enabled = false;
+            return;
+        }
 
         if (messObject != null && !messObject.activeSelf)
         {
@@ -58,6 +57,7 @@ public class GymCleaningTrigger : MonoBehaviour
         if (_elapsed >= cleaningDuration)
         {
             _cleaned = true;
+            enabled = false;
             if (fillImage != null) fillImage.fillAmount = 1f;
             FinishCleaning();
         }
@@ -69,16 +69,18 @@ public class GymCleaningTrigger : MonoBehaviour
         if (messObject != null && !messObject.activeSelf) return;
 
         _playerInside = true;
+        enabled = true;
         if (mop != null) mop.SetActive(true);
         if (characterMovement != null) characterMovement.canMove = false;
         if (playerAnim != null) playerAnim.ForceCleaningState();
-        ArrowManager.Instance?.HideArrow();
+        if (ArrowManager.Instance != null) ArrowManager.Instance.HideArrow();
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (other == null || (player != null && other.gameObject != player)) return;
         _playerInside = false;
+        enabled = false;
         ResetFill();
         if (mop != null) mop.SetActive(false);
         if (characterMovement != null) characterMovement.canMove = true;
@@ -97,17 +99,21 @@ public class GymCleaningTrigger : MonoBehaviour
         if (characterMovement != null) characterMovement.canMove = true;
         if (playerAnim != null) playerAnim.StopCleaningState();
 
-        if (cleaningCompleteVFX != null)
-        {
-            cleaningCompleteVFX.SetActive(false); 
-            cleaningCompleteVFX.SetActive(true);
-        }
-        messObject.SetActive(false);
+        PlayVFXAt(cleaningVFXPoint);
+
+        if (messObject != null) messObject.SetActive(false);
         if (GymManager.Instance == null) return;
 
         if (area == GymArea.Treadmill)
             GymManager.Instance.OnTreadmillCleaned();
         else
             GymManager.Instance.OnBicepCleaned();
+    }
+
+    private void PlayVFXAt(Transform point)
+    {
+        if (sharedVFX == null || point == null) return;
+        sharedVFX.transform.position = point.position;
+        sharedVFX.Play();
     }
 }

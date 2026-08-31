@@ -1,25 +1,23 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class BillboardUI : MonoBehaviour
 {
-    private Camera _cam;
-    private Quaternion _targetRotation;
+    [SerializeField] private float rotationSpeed = 15f;
+
+    private static readonly Quaternion TargetRotation = Quaternion.Euler(45f, 180f, 0f);
+    private Transform _transform;
 
     private void Awake()
     {
-        _cam = Camera.main;
-        _targetRotation = Quaternion.Euler(30, 180f, 0f);
+        _transform = transform;
     }
 
     private void LateUpdate()
     {
-        if (transform.parent != null)
-        {
-            transform.localRotation = Quaternion.Inverse(transform.parent.rotation) * _targetRotation;
-        }
-        else
-        {
-            transform.rotation = _targetRotation;
-        }
+        _transform.rotation = Quaternion.Slerp(
+            _transform.rotation,
+            TargetRotation,
+            Time.deltaTime * rotationSpeed
+        );
     }
 }
