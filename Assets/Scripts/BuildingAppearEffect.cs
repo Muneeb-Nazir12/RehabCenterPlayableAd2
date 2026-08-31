@@ -10,26 +10,27 @@ public class BuildingAppearEffect : MonoBehaviour
     [Tooltip("Place an empty GameObject at the visual center of the building and assign it here.")]
     [SerializeField] private Transform buildingCenterPoint;
 
+    [Header("Camera Focus")]
+    [Tooltip("Which room this building is. Camera moves to the matching point assigned on CameraFollower.")]
+    [SerializeField] private CameraFollower.RoomType roomType;
+
+    [Tooltip("How long camera holds at the focus point. -1 uses CameraFollower's default focusWaitDuration.")]
+    [SerializeField] private float cameraHoldDuration = -1f;
+
     [Header("Animation")]
     [SerializeField] private float duration = 0.6f;
 
     [SerializeField]
-    private AnimationCurve scaleCurve =
-        AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    private AnimationCurve scaleCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Objects That Must NEVER Move")]
-    [Tooltip(
-        "Add gameplay objects here such as CounterPoint, TablePoint, " +
-        "ChairPoint, PatientPoint, CashPoint, etc."
-    )]
-    [SerializeField]
-    private List<Transform> protectedObjects =
-        new List<Transform>();
+    [SerializeField] private List<Transform> protectedObjects = new List<Transform>();
 
     private Vector3 targetScale;
     private Coroutine showCoroutine;
+    private Transform _buildingTransform;
 
-    private class SavedTransform
+    private struct SavedTransform
     {
         public Transform transform;
         public Transform parent;
@@ -37,28 +38,19 @@ public class BuildingAppearEffect : MonoBehaviour
         public Quaternion rotation;
         public Vector3 scale;
     }
-
-    private readonly List<SavedTransform> savedObjects =
-        new List<SavedTransform>();
+    private readonly List<SavedTransform> savedObjects = new List<SavedTransform>(8);
 
     private void Awake()
     {
-        if (building == null)
+        if (building != null)
         {
-            Debug.LogError(
-                $"BuildingAppearEffect on {gameObject.name}: Building is not assigned."
-            );
-            return;
+            _buildingTransform = building.transform;
+            targetScale = _buildingTransform.localScale;
         }
-
-        targetScale = building.transform.localScale;
     }
 
     public void Show()
     {
-        if (building == null)
-            return;
-
         if (showCoroutine != null)
             StopCoroutine(showCoroutine);
 
@@ -67,14 +59,15 @@ public class BuildingAppearEffect : MonoBehaviour
 
     private IEnumerator ShowRoutine()
     {
-        if (building == null)
-            yield break;
+        if (building == null || _buildingTransform == null) yield break;
+
+        if (CameraFollower.Instance != null)
+            CameraFollower.Instance.FocusOnRoom(roomType, cameraHoldDuration);
 
         SaveAndDetachProtectedObjects();
 
-        Transform buildingTransform = building.transform;
-        Vector3 originalPosition = buildingTransform.position;
-        Quaternion originalRotation = buildingTransform.rotation;
+        Vector3 originalPosition = _buildingTransform.position;
+        Quaternion originalRotation = _buildingTransform.rotation;
 
         Vector3 centerWorld = buildingCenterPoint != null
             ? buildingCenterPoint.position
@@ -83,53 +76,52 @@ public class BuildingAppearEffect : MonoBehaviour
         Vector3 pivotToCenter = centerWorld - originalPosition;
 
         building.SetActive(true);
-        buildingTransform.localScale = Vector3.zero;
-        buildingTransform.position = originalPosition + pivotToCenter;
+        _buildingTransform.localScale = Vector3.zero;
+        _buildingTransform.position = originalPosition + pivotToCenter;
 
         float elapsed = 0f;
 
         if (duration <= 0f)
         {
-            buildingTransform.localScale = targetScale;
-            buildingTransform.position = originalPosition;
-            buildingTransform.rotation = originalRotation;
+            _buildingTransform.localScale = targetScale;
+            _buildingTransform.position = originalPosition;
+            _buildingTransform.rotation = originalRotation;
         }
         else
         {
+            float invDur = 1f / duration;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed * invDur);
+                float curveValue = scaleCurve != null ? scaleCurve.Evaluate(t) : t;
 
-                float t = Mathf.Clamp01(elapsed / duration);
-                float curveValue = scaleCurve.Evaluate(t);
-
-                buildingTransform.localScale = Vector3.LerpUnclamped(Vector3.zero, targetScale, curveValue);
-                buildingTransform.position = originalPosition + pivotToCenter * (1f - curveValue);
-                buildingTransform.rotation = originalRotation;
+                _buildingTransform.localScale = Vector3.LerpUnclamped(Vector3.zero, targetScale, curveValue);
+                _buildingTransform.position = originalPosition + pivotToCenter * (1f - curveValue);
+                _buildingTransform.rotation = originalRotation;
 
                 yield return null;
             }
         }
 
-        buildingTransform.localScale = targetScale;
-        buildingTransform.position = originalPosition;
-        buildingTransform.rotation = originalRotation;
+        _buildingTransform.localScale = targetScale;
+        _buildingTransform.position = originalPosition;
+        _buildingTransform.rotation = originalRotation;
 
         RestoreProtectedObjects();
-
         showCoroutine = null;
     }
 
     private void SaveAndDetachProtectedObjects()
     {
         savedObjects.Clear();
+        if (protectedObjects == null) return;
 
-        for (int i = 0; i < protectedObjects.Count; i++)
+        int count = protectedObjects.Count;
+        for (int i = 0; i < count; i++)
         {
             Transform obj = protectedObjects[i];
-
-            if (obj == null)
-                continue;
+            if (obj == null) continue;
 
             SavedTransform saved = new SavedTransform
             {
@@ -141,9 +133,7 @@ public class BuildingAppearEffect : MonoBehaviour
             };
 
             savedObjects.Add(saved);
-
             obj.SetParent(null, true);
-
             obj.position = saved.position;
             obj.rotation = saved.rotation;
             obj.localScale = saved.scale;
@@ -152,27 +142,19 @@ public class BuildingAppearEffect : MonoBehaviour
 
     private void RestoreProtectedObjects()
     {
-        for (int i = 0; i < savedObjects.Count; i++)
+        int count = savedObjects.Count;
+        for (int i = 0; i < count; i++)
         {
             SavedTransform saved = savedObjects[i];
-
-            if (saved.transform == null)
-                continue;
+            if (saved.transform == null) continue;
 
             Transform obj = saved.transform;
-
             obj.SetParent(saved.parent, true);
-
             obj.position = saved.position;
             obj.rotation = saved.rotation;
             obj.localScale = saved.scale;
         }
 
         savedObjects.Clear();
-    }
-
-    public bool IsAnimating()
-    {
-        return showCoroutine != null;
     }
 }

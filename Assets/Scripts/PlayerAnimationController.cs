@@ -9,76 +9,53 @@ public class PlayerAnimationController : MonoBehaviour
 
     private const int StateIdle = 0;
     private const int StateWalk = 1;
-    private const int StateWalkWithHolding = 2;
-    private const int StateIdleWithHolding = 3;
-    private const int StateCleaning = 4;
+    private const int StateCleaning = 2;
 
     private int _currentState = -1;
-    private bool _atTowel;
-    private bool _hasItem;
     private bool _isCleaning;
+    private bool _wasMoving;
 
-    private void Awake() => Instance = this;
+    private CharacterMovement _characterMovement;
 
-    private void Update()
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    private void Start()
+    {
+        _characterMovement = CharacterMovement.Instance;
+        SetAnimState(StateIdle);
+    }
+
+    public void OnMovementChanged(bool isMoving)
     {
         if (_isCleaning) return;
-        RefreshAnimation();
+        if (isMoving == _wasMoving) return;
+        _wasMoving = isMoving;
+        SetAnimState(isMoving ? StateWalk : StateIdle);
     }
-    public void SetAtTowel(bool state) { _atTowel = state; ForceRefresh(); }
-    public void OnTowelPickedUp()
-    {
-        _atTowel = false;
-        _hasItem = true;
-        ForceRefresh();
-    }
-    public void OnTowelDelivered()
-    {
-        _hasItem = false;
-        ForceRefresh();
-    }
-
-    public void SetHasItem(bool state) { _hasItem = state; ForceRefresh(); }
 
     public void ForceCleaningState()
     {
         _isCleaning = true;
-        _currentState = StateCleaning;
-        if (animator != null) animator.SetInteger(PlayerAnimState, StateCleaning);
+        SetAnimState(StateCleaning);
     }
 
     public void StopCleaningState()
     {
         _isCleaning = false;
         _currentState = -1;
-        RefreshAnimation();
+        if (_characterMovement == null) _characterMovement = CharacterMovement.Instance;
+        bool isMoving = _characterMovement != null && _characterMovement.IsMoving;
+        _wasMoving = isMoving;
+        SetAnimState(isMoving ? StateWalk : StateIdle);
     }
 
-    private void ForceRefresh() { _currentState = -1; RefreshAnimation(); }
-
-    private void RefreshAnimation()
+    private void SetAnimState(int state)
     {
-        if (animator == null) return;
-
-        bool isMoving = CharacterMovement.Instance != null && CharacterMovement.Instance.IsMoving;
-
-        int targetState;
-
-        if (_hasItem)
-        {
-            targetState = isMoving ? StateWalkWithHolding : StateIdleWithHolding;
-        }
-        else if (_atTowel)
-        {
-            targetState = StateIdle;
-        }
-        else
-        {
-            targetState = isMoving ? StateWalk : StateIdle;
-        }
-
-        if (targetState == _currentState) return;
-        _currentState = targetState;
-        animator.SetInteger(PlayerAnimState, targetState);
+        if (animator == null || state == _currentState) return;
+        _currentState = state;
+        animator.SetInteger(PlayerAnimState, state);
     }
 }

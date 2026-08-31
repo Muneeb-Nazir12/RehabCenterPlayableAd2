@@ -5,101 +5,169 @@ public class GymManager : MonoBehaviour
 {
     public static GymManager Instance { get; private set; }
 
-    [Header("Patient")]
+    [Header("Patient Mover")]
+    [SerializeField] private PatientMover mover;
     [SerializeField] private Transform patient;
-    [SerializeField] private float moveSpeed = 2f;
-    [SerializeField] private float rotationSpeed = 8f;
 
-    [Header("UI")]
-    [SerializeField] private GameObject gymFinalRecoveryHeader;
-    [SerializeField] private GameObject postExerciseHeadUI;
-
-    [Header("Treadmill")]
-    [SerializeField] private Transform treadmillPoint;
+    [Header("Treadmill — 2 waypoints")]
+    [SerializeField] private Transform treadmillPoint1;
+    [SerializeField] private Transform treadmillPoint2;
     [SerializeField] private GameObject treadmillEquipment;
     [SerializeField] private GameObject treadmillMessObject;
     [SerializeField] private GameObject treadmillCleaningLogo;
 
-    [Header("Bicep Machine")]
-    [SerializeField] private Transform bicepPoint;
+    [Header("Bicep Machine — 3 waypoints")]
+    [SerializeField] private Transform bicepPoint1;
+    [SerializeField] private Transform bicepPoint2;
+    [SerializeField] private Transform bicepPoint3;
     [SerializeField] private GameObject dumbbellLeftHand;
     [SerializeField] private GameObject dumbbellRightHand;
     [SerializeField] private GameObject bicepEquipment;
+    [SerializeField] private ParticleSystem confettiParticle;
+    [SerializeField] private ParticleSystem streamers;
+    [SerializeField] private ParticleSystem confettiParticle1;
+    [SerializeField] private ParticleSystem streamers1;
     [SerializeField] private GameObject bicepMessObject;
     [SerializeField] private GameObject bicepCleaningLogo;
 
     [Header("Other")]
-    [SerializeField] private GameObject gymFinalRecoveryObject;
     [SerializeField] private Transform exitPoint1, exitPoint2, exitPoint3;
 
     [Header("Arrow Targets")]
-    [SerializeField] private Transform treadmillArrowTarget;
-    [SerializeField] private Transform bicepArrowTarget;
     [SerializeField] private Transform treadmillCleanArrowTarget;
     [SerializeField] private Transform bicepCleanArrowTarget;
 
+    [Header("VFX")]
+    [SerializeField] private GameObject exerciseSparkleVFX;
+
     private bool _treadmillCleaned, _bicepCleaned, _patientLeaving;
+
     private static readonly WaitForSeconds WaitAnim = new WaitForSeconds(1f);
+    private static readonly WaitForSeconds WaitAnim2 = new WaitForSeconds(1.5f);
 
-    private void Awake() => Instance = this;
+    private Transform[] _treadmillPath;
+    private Transform[] _bicepPath;
+    private Transform[] _exitPath;
 
-    private static void Show(GameObject go, bool state) { if (go) go.SetActive(state); }
+    private void Awake()
+    {
+        Instance = this;
+        _treadmillPath = new Transform[] { treadmillPoint1, treadmillPoint2 };
+        _bicepPath = new Transform[] { bicepPoint1, bicepPoint2, bicepPoint3 };
+        _exitPath = new Transform[] { exitPoint1, exitPoint2, exitPoint3 };
+    }
+
+    private static void Show(GameObject go, bool state)
+    {
+        if (go != null && go.activeSelf != state) go.SetActive(state);
+    }
+
+    private void PlayVFX(GameObject vfx)
+    {
+        if (vfx == null) return;
+        vfx.SetActive(false);
+        vfx.SetActive(true);
+    }
 
     public void OnGymUnlocked()
     {
+        TargetArrowIndicator.Hide(6);
         _treadmillCleaned = _bicepCleaned = _patientLeaving = false;
-
-        CafePatientController.Instance?.HidePostCafeHeadUI();
-        Show(gymFinalRecoveryHeader, true);
         PlayableSequenceManager.Instance?.HideQuestText();
+        PlayableSequenceManager.Instance?.ShowGymFinalRecovery();
+        StartCoroutine(WaitForShowerThenStart());
+    }
+
+    private IEnumerator WaitForShowerThenStart()
+    {
+        if (ShowerManager.Instance != null)
+            while (!ShowerManager.Instance.IsShowerCompleted) yield return null;
 
         StartCoroutine(GymSequence());
     }
 
     private IEnumerator GymSequence()
     {
-        // --- Treadmill ---
-        ArrowManager.Instance?.PointArrowTowards(treadmillArrowTarget);
-        yield return MovePatient(treadmillPoint);
-        PatientAnimationController.Instance?.SetTreadmill();
+        if (mover != null && _treadmillPath != null)
+        {
+            mover.MovePath(_treadmillPath);
+            while (mover.IsMoving) yield return null;
+        }
+
+        if (ShowerManager.Instance != null && ShowerManager.Instance.gymUI != null)
+            ShowerManager.Instance.gymUI.SetActive(false);
+        if (PatientAnimationController.Instance != null)
+            PatientAnimationController.Instance.SetTreadmill();
         yield return WaitAnim;
-        PatientAnimationController.Instance?.SetIdle();
+
+        if (PatientAnimationController.Instance != null)
+            PatientAnimationController.Instance.SetIdle();
+        PlayVFX(exerciseSparkleVFX);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayEffectSound();
+
+        PlayableSequenceManager.Instance?.HideGymFinalRecovery();
         Show(treadmillEquipment, false);
         Show(treadmillMessObject, true);
         Show(treadmillCleaningLogo, true);
 
-        // --- Bicep ---
-        ArrowManager.Instance?.PointArrowTowards(bicepArrowTarget);
-        yield return MovePatient(bicepPoint);
+        if (!_treadmillCleaned)
+            ArrowManager.Instance?.PointArrowTowards(treadmillCleanArrowTarget);
+        PlayableSequenceManager.Instance?.ShowQuestText("Clean the gym");
+        TargetArrowIndicator.GoToTarget(7);
+
+        if (mover != null && _bicepPath != null)
+        {
+            mover.MovePath(_bicepPath);
+            while (mover.IsMoving) yield return null;
+        }
+
         Show(dumbbellLeftHand, true);
         Show(dumbbellRightHand, true);
-        PatientAnimationController.Instance?.SetBicep();
+        if (PatientAnimationController.Instance != null)
+            PatientAnimationController.Instance.SetBicep();
         yield return WaitAnim;
+
+        TargetArrowIndicator.GoToTarget2(0);
         Show(dumbbellLeftHand, false);
         Show(dumbbellRightHand, false);
-        PatientAnimationController.Instance?.SetIdle();
-        Show(gymFinalRecoveryObject, false);
+        if (PatientAnimationController.Instance != null)
+            PatientAnimationController.Instance.SetIdle();
+        PlayVFX(exerciseSparkleVFX);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayEffectSound();
+
         Show(bicepEquipment, false);
         Show(bicepMessObject, true);
         Show(bicepCleaningLogo, true);
-        Show(postExerciseHeadUI, true);
 
         StartCoroutine(PatientExitSequence());
 
-        // --- Clean treadmill ---
-        ArrowManager.Instance?.PointArrowTowards(treadmillCleanArrowTarget);
-        PlayableSequenceManager.Instance?.ShowQuestText("Clean the treadmill area");
-        yield return new WaitUntil(() => _treadmillCleaned);
+        while (!_treadmillCleaned || !_bicepCleaned)
+        {
+            if (_treadmillCleaned && !_bicepCleaned)
+            {
+                ArrowManager.Instance?.PointArrowTowards(bicepCleanArrowTarget);
+                TargetArrowIndicator.Hide(7);
+                TargetArrowIndicator.GoToTarget(9);
+            }
+            else if (_bicepCleaned && !_treadmillCleaned)
+            {
+                ArrowManager.Instance?.PointArrowTowards(treadmillCleanArrowTarget);
+                TargetArrowIndicator.Hide2(0);
+            }
 
-        // --- Clean bicep ---
-        ArrowManager.Instance?.PointArrowTowards(bicepCleanArrowTarget);
-        PlayableSequenceManager.Instance?.ShowQuestText("Clean the bicep area");
-        yield return new WaitUntil(() => _bicepCleaned);
+            yield return null;
+        }
 
-        // --- Done ---
         PlayableSequenceManager.Instance?.HideQuestText();
-        Show(gymFinalRecoveryHeader, false);
-        Show(postExerciseHeadUI, false);
+        CharacterMovement.Instance.canMove = false;
+        PatientMover.Instance.Stop();
+        ArrowManager.Instance?.HideArrow();
+        AudioManager.Instance?.LevelCompletionSound();
+        confettiParticle?.Play();
+        streamers.Play();
+        confettiParticle1.Play();
+        streamers1.Play();
+        yield return WaitAnim2;
         GameCompletionManager.Instance?.TriggerCompletion();
     }
 
@@ -107,21 +175,22 @@ public class GymManager : MonoBehaviour
     {
         if (_patientLeaving) yield break;
         _patientLeaving = true;
+        if (PatientAnimationController.Instance != null)
+            PatientAnimationController.Instance.SetHappyWalk();
 
-        Show(gymFinalRecoveryHeader, false);
-        Show(postExerciseHeadUI, false);
-        PatientAnimationController.Instance?.SetHappyWalk();
+        if (mover != null && _exitPath != null)
+        {
+            mover.MovePath(_exitPath);
+            while (mover.IsMoving) yield return null;
+        }
 
-        yield return MovePatient(exitPoint1);
-        yield return MovePatient(exitPoint2);
-        yield return MovePatient(exitPoint3);
-
-        if (patient) patient.gameObject.SetActive(false);
+        if (patient != null) patient.gameObject.SetActive(false);
     }
 
     public void OnTreadmillCleaned()
     {
         if (_treadmillCleaned) return;
+        TargetArrowIndicator.Hide(7);
         _treadmillCleaned = true;
         Show(treadmillMessObject, false);
         Show(treadmillCleaningLogo, false);
@@ -132,52 +201,11 @@ public class GymManager : MonoBehaviour
     public void OnBicepCleaned()
     {
         if (_bicepCleaned) return;
+        TargetArrowIndicator.Hide2(0);
         _bicepCleaned = true;
         Show(bicepMessObject, false);
         Show(bicepCleaningLogo, false);
         Show(bicepEquipment, true);
         AudioManager.Instance?.PlayCleaningSound();
-    }
-
-    private IEnumerator MovePatient(Transform target, Quaternion? finalRotation = null)
-    {
-        if (target == null || patient == null) yield break;
-
-        Vector3 targetPos = target.position;
-        Vector3 startDiff = targetPos - patient.position;
-        startDiff.y = 0f;
-
-        if (startDiff.sqrMagnitude <= 0.01f)
-        {
-            if (finalRotation.HasValue)
-                patient.rotation = finalRotation.Value;
-            yield break;
-        }
-
-        PatientAnimationController.Instance?.SetWalk();
-
-        while (true)
-        {
-            Vector3 diff = targetPos - patient.position;
-            diff.y = 0f;
-
-            if (diff.sqrMagnitude <= 0.01f) break;
-
-            patient.position = Vector3.MoveTowards(
-                patient.position, targetPos, moveSpeed * Time.unscaledDeltaTime);
-
-            if (diff.sqrMagnitude > 0.0001f)
-                patient.rotation = Quaternion.Slerp(
-                    patient.rotation,
-                    Quaternion.LookRotation(diff),
-                    rotationSpeed * Time.unscaledDeltaTime);
-
-            yield return null;
-        }
-
-        if (finalRotation.HasValue)
-            patient.SetPositionAndRotation(targetPos, finalRotation.Value);
-        else
-            patient.position = targetPos;
     }
 }

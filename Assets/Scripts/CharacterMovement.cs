@@ -1,118 +1,95 @@
 using UnityEngine;
 
-/// <summary>
-/// Player movement controller.
-/// Optimized for Luna playable ads (target: 2-3 ms per frame).
-/// — No per-frame allocations
-/// — Cached Rigidbody, sqrMagnitude threshold precomputed
-/// — No Vector3/Quaternion heap objects in hot path
-/// — FixedUpdate only (no Update polling)
-/// — Physics-based movement with velocity change (no drag fight)
-/// </summary>
-[RequireComponent(typeof(Rigidbody))]
 public class CharacterMovement : MonoBehaviour
 {
     public static CharacterMovement Instance;
 
-    [Header("Input")]
     public PlayableDynamicJoystick joystick;
-    public CameraFollower          playerCamera;
-
-    [Header("Movement")]
-    public float moveSpeed     = 4f;
+    public CameraFollower playerCamera;
+    public float moveSpeed = 4f;
     public float rotationSpeed = 15f;
-    public bool  canMove       = true;
+    public bool canMove;
 
-    [Header("Misc")]
+    [SerializeField] private Rigidbody rb;
     [SerializeField] private float movementThreshold = 0.01f;
     [SerializeField] private FootstepParticleController _footstep;
 
     public bool IsMoving { get; private set; }
 
-    // Cached components / precomputed values
-    private Rigidbody _rb;
-    private float     _moveSqrThreshold;
-    private float     _rotSpeedDeg;          // rotationSpeed × 50 (RotateTowards expects degrees)
+    private float _movementThresholdSqr;
+    private bool _wasMoving;
 
-    // Reused structs — avoids creating new Vector3s on heap each FixedUpdate
-    private Vector3 _inputDir;
-    private Vector3 _targetVel;
-    private Vector3 _velDiff;
+    private static readonly Vector3 Zero3 = Vector3.zero;
 
     private void Awake()
     {
         Instance = this;
+        _movementThresholdSqr = movementThreshold * movementThreshold;
 
-        _rb = GetComponent<Rigidbody>();
-        _rb.linearVelocity   = Vector3.zero;
-        _rb.angularVelocity  = Vector3.zero;
-        _rb.constraints      = RigidbodyConstraints.FreezeRotationX
-                             | RigidbodyConstraints.FreezeRotationY
-                             | RigidbodyConstraints.FreezeRotationZ;
-
-        _moveSqrThreshold = movementThreshold * movementThreshold;
-        _rotSpeedDeg      = rotationSpeed * 50f;
+        if (rb != null)
+        {
+            rb.linearVelocity = Zero3;
+            rb.angularVelocity = Zero3;
+            rb.constraints = RigidbodyConstraints.FreezeRotationX
+                           | RigidbodyConstraints.FreezeRotationY
+                           | RigidbodyConstraints.FreezeRotationZ;
+        }
 
         if (playerCamera != null)
         {
             playerCamera.gameObject.SetActive(true);
             playerCamera.enabled = true;
         }
+        canMove = true;
     }
 
     private void FixedUpdate()
     {
         float h = joystick != null ? joystick.Horizontal : 0f;
-        float v = joystick != null ? joystick.Vertical   : 0f;
-        float sqr = h * h + v * v;
+        float v = joystick != null ? joystick.Vertical : 0f;
+        float inputSqr = h * h + v * v;
 
-        if (canMove)
+        bool moving = canMove && inputSqr > _movementThresholdSqr;
+
+        if (moving)
         {
-            if (sqr > 0.01f)
-            {
-                // Normalize inline — no Mathf.Sqrt heap call, uses reciprocal
-                float invMag = 1f / Mathf.Sqrt(sqr);
-                _inputDir.x = h * invMag;
-                _inputDir.y = 0f;
-                _inputDir.z = v * invMag;
+            float invMag = 1f / Mathf.Sqrt(inputSqr);
+            float dirX = h * invMag;
+            float dirZ = v * invMag;
 
-                // Velocity change — no drag, instant response
-                _targetVel.x = _inputDir.x * moveSpeed;
-                _targetVel.y = 0f;
-                _targetVel.z = _inputDir.z * moveSpeed;
+            Vector3 currentVel = rb.linearVelocity;
+            rb.linearVelocity = new Vector3(dirX * moveSpeed, currentVel.y, dirZ * moveSpeed);
 
-                Vector3 curVel = _rb.linearVelocity;
-                _velDiff.x = _targetVel.x - curVel.x;
-                _velDiff.y = 0f;
-                _velDiff.z = _targetVel.z - curVel.z;
-
-                if (_velDiff.x * _velDiff.x + _velDiff.z * _velDiff.z > 0.0001f)
-                    _rb.AddForce(_velDiff, ForceMode.VelocityChange);
-
-                // Rotation
-                _rb.MoveRotation(Quaternion.RotateTowards(
-                    _rb.rotation,
-                    Quaternion.LookRotation(_inputDir),
-                    _rotSpeedDeg * Time.fixedDeltaTime));
-            }
-            else
-            {
-                Brake();
-            }
+            Vector3 dir = new Vector3(dirX, 0f, dirZ);
+            Quaternion targetRot = Quaternion.LookRotation(dir);
+            rb.MoveRotation(Quaternion.RotateTowards(rb.rotation, targetRot, rotationSpeed * 50f * Time.fixedDeltaTime));
         }
         else
         {
-            Brake();
+            ApplyBraking();
         }
 
-        IsMoving = canMove && sqr > _moveSqrThreshold;
+        if (moving != _wasMoving)
+        {
+            _wasMoving = moving;
+            IsMoving = moving;
+            if (PlayerAnimationController.Instance != null)
+                PlayerAnimationController.Instance.OnMovementChanged(moving);
+            if (_footstep != null)
+                _footstep.OnMovementChanged(moving);
+        }
     }
 
-    private void Brake()
+    private void ApplyBraking()
     {
-        Vector3 vel = _rb.linearVelocity;
-        float bx = -vel.x, bz = -vel.z;
-        if (bx * bx + bz * bz > 0.0001f)
-            _rb.AddForce(new Vector3(bx, 0f, bz), ForceMode.VelocityChange);
+        if (rb == null) return;
+        Vector3 vel = rb.linearVelocity;
+        if (vel.x != 0f || vel.z != 0f)
+        {
+            if (vel.x * vel.x + vel.z * vel.z > 0.0001f)
+            {
+                rb.linearVelocity = new Vector3(0f, vel.y, 0f);
+            }
+        }
     }
 }

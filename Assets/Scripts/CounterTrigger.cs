@@ -19,15 +19,20 @@ public class CounterTrigger : MonoBehaviour
 
     private void Awake()
     {
-        _invDuration = 1f / serviceDuration;
-        fillImage.fillAmount = 0f;
-        greenCircle.SetActive(false);
-        whiteCircle.SetActive(true);
+        _invDuration = serviceDuration > 0f ? 1f / serviceDuration : 2f;
+        if (fillImage != null) fillImage.fillAmount = 0f;
+        if (greenCircle != null) greenCircle.SetActive(false);
+        if (whiteCircle != null) whiteCircle.SetActive(true);
+        enabled = false;
     }
 
     private void Update()
     {
-        if (!_playerInside || _served) return;
+        if (!_playerInside || _served)
+        {
+            enabled = false;
+            return;
+        }
 
         bool isPatientReady = CafePatientController.Instance != null && CafePatientController.Instance.IsPatientAtCounter;
         if (!isPatientReady)
@@ -46,9 +51,10 @@ public class CounterTrigger : MonoBehaviour
         if (_elapsed >= serviceDuration)
         {
             _served = true;
+            enabled = false;
             if (fillImage != null) fillImage.fillAmount = 0f;
-            if (greenCircle != null) greenCircle.SetActive(false);
-            if (whiteCircle != null) whiteCircle.SetActive(true);
+            if (greenCircle != null && greenCircle.activeSelf) greenCircle.SetActive(false);
+            if (whiteCircle != null && !whiteCircle.activeSelf) whiteCircle.SetActive(true);
             if (ArrowManager.Instance != null) ArrowManager.Instance.HideArrow();
             if (CafeManager.Instance != null) CafeManager.Instance.OnPlayerServedCounter();
         }
@@ -56,10 +62,11 @@ public class CounterTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other == null || (player != null && other.gameObject != player)) return;
+        if (_served || other == null || (player != null && other.gameObject != player)) return;
         _playerInside = true;
-        if (greenCircle != null) greenCircle.SetActive(true);
-        if (whiteCircle != null) whiteCircle.SetActive(false);
+        enabled = true;
+        if (greenCircle != null && !greenCircle.activeSelf) greenCircle.SetActive(true);
+        if (whiteCircle != null && whiteCircle.activeSelf) whiteCircle.SetActive(false);
         if (ArrowManager.Instance != null) ArrowManager.Instance.HideArrow();
     }
 
@@ -67,9 +74,10 @@ public class CounterTrigger : MonoBehaviour
     {
         if (other == null || (player != null && other.gameObject != player)) return;
         _playerInside = false;
+        enabled = false;
         _elapsed = 0f;
         if (fillImage != null) fillImage.fillAmount = 0f;
-        if (greenCircle != null) greenCircle.SetActive(false);
-        if (whiteCircle != null) whiteCircle.SetActive(true);
+        if (greenCircle != null && greenCircle.activeSelf) greenCircle.SetActive(false);
+        if (whiteCircle != null && !whiteCircle.activeSelf) whiteCircle.SetActive(true);
     }
 }

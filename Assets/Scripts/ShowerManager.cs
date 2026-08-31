@@ -5,13 +5,9 @@ public class ShowerManager : MonoBehaviour
 {
     public static ShowerManager Instance { get; private set; }
 
-    [Header("Patient")]
+    [Header("Patient Mover")]
+    [SerializeField] private PatientMover mover;
     [SerializeField] private Transform patient;
-    [SerializeField] private float moveSpeed = 2f;
-    [SerializeField] private float rotationSpeed = 8f;
-
-    [Header("Path Points — Lobby Wait Before Shower Unlock")]
-    [SerializeField] private Transform lobbyWaitPoint;
 
     [Header("Path Points — To Shower")]
     [SerializeField] private Transform showerPoint1;
@@ -26,155 +22,136 @@ public class ShowerManager : MonoBehaviour
 
     [Header("Shower VFX and UI")]
     [SerializeField] private GameObject showerVFX;
-    [SerializeField] private GameObject showerUIPanel;
-    [SerializeField] private GameObject showerGameObject;
 
     [Header("Arrow Targets")]
     [SerializeField] private Transform showerRoomArrowTarget;
-    [SerializeField] private Transform towelPickupArrowTarget;
-    [SerializeField] private Transform showerDeliveryArrowTarget;
     [SerializeField] private Transform cashArrowTarget;
     [SerializeField] private Transform gymUnlockArrowTarget;
 
-    [Header("Player")]
-    [SerializeField] private GameObject playerHandTowel;
-
-    [Header("Towel Pickup Trigger")]
-    [SerializeField] private GameObject towelPickupTriggerObject;
-    [SerializeField] private GameObject towelPickupGreenCircle;
-
     [Header("Cash and Next Unlock")]
     [SerializeField] private CashBundle cashBundle;
-    [SerializeField] private GameObject nextBuildingUnlockPoint;
 
-    [Header("Patient Head UI — Shower")]
-    [SerializeField] private GameObject showerHeadUI;
+    [Header("Gym Unlock")]
+    [SerializeField] private GameObject gymUnlockPointObject;
+    [SerializeField] private GameObject gymUnlockObjectCanvas;
 
-    public bool IsTowelPickedUp { get; private set; }
+    [Header("VFX")]
+    [SerializeField] private GameObject cloudVFX;
+    [SerializeField] private GameObject afterShowerVFX;
+
+    [Header("Shower Snap Settings")]
+    [SerializeField] private float showerSnapY = 0.3f;
+    [SerializeField] private float showerVFXDuration = 2f;
+
+    public GameObject gymUI;
     public bool IsShowerCompleted { get; private set; }
 
-    private static readonly WaitForSeconds WaitShowerVFX = new WaitForSeconds(2f);
+    private static readonly Quaternion ShowerSnapRotation = Quaternion.Euler(0f, 0f, 0f);
+
+    private Transform[] _exitPath;
 
     private void Awake()
     {
         Instance = this;
-        if (towelPickupTriggerObject != null) towelPickupTriggerObject.SetActive(false);
-        if (towelPickupGreenCircle != null) towelPickupGreenCircle.SetActive(false);
+        _exitPath = new Transform[] { exitPoint1, exitPoint2, exitPoint3, exitPoint4 };
     }
 
-    public void OnShowerUnlocked() => StartCoroutine(ShowerSequence());
+    private void PlayVFX(GameObject vfx)
+    {
+        if (vfx == null) return;
+        vfx.SetActive(false);
+        vfx.SetActive(true);
+    }
+
+    public void OnShowerUnlocked()
+    {
+        TargetArrowIndicator.Hide(5);
+        StartCoroutine(ShowerSequence());
+    }
 
     private IEnumerator ShowerSequence()
     {
-        // Stop the cafe coroutine FIRST — prevents both coroutines from
-        // fighting over patient.position / patient.rotation simultaneously.
-        CafePatientController.Instance?.StopPatientFlow();
+        if (PlayableSequenceManager.Instance != null)
+        {
+            PlayableSequenceManager.Instance.HideQuestText();
+            PlayableSequenceManager.Instance.ShowHeNeedsShower();
+        }
 
+        while (CafePatientController.Instance == null
+            || !CafePatientController.Instance.IsFlowComplete) yield return null;
+
+        CafePatientController.Instance.StopPatientFlow();
         IsShowerCompleted = false;
-        IsTowelPickedUp = false;
 
-        CafePatientController.Instance?.HidePostCafeHeadUI();
+        if (mover != null)
+        {
+            mover.MoveTo(showerPoint1, null);
+            while (mover.IsMoving) yield return null;
 
-        if (showerHeadUI != null) showerHeadUI.SetActive(true);
-        ArrowManager.Instance?.PointArrowTowards(showerRoomArrowTarget);
+            mover.MoveTo(showerPoint2, null);
+            while (mover.IsMoving) yield return null;
 
-        yield return MovePatient(showerPoint1);
-        yield return MovePatient(showerPoint2);
-        yield return MovePatient(showerPoint3);
+            mover.MoveTo(showerPoint3, null);
+            while (mover.IsMoving) yield return null;
+        }
 
-        PatientAnimationController.Instance?.SetIdle();
+        Vector3 lockedPos = Vector3.zero;
+        if (patient != null)
+        {
+            lockedPos = new Vector3(patient.position.x, showerSnapY, patient.position.z);
+            patient.SetPositionAndRotation(lockedPos, ShowerSnapRotation);
+        }
 
-        if (showerHeadUI != null) showerHeadUI.SetActive(false);
-        PlayableSequenceManager.Instance?.HideQuestText();
+        if (CafePatientController.Instance != null && CafePatientController.Instance.showerUI != null)
+            CafePatientController.Instance.showerUI.SetActive(false);
 
-        if (showerGameObject != null) showerGameObject.SetActive(false);
+        if (PatientAnimationController.Instance != null)
+            PatientAnimationController.Instance.SetIdle();
 
         if (showerVFX != null) showerVFX.SetActive(true);
-        yield return WaitShowerVFX;
+
+        float showerElapsed = 0f;
+        while (showerElapsed < showerVFXDuration)
+        {
+            if (patient != null)
+                patient.SetPositionAndRotation(lockedPos, ShowerSnapRotation);
+            showerElapsed += Time.deltaTime;
+            yield return null;
+        }
+
         if (showerVFX != null) showerVFX.SetActive(false);
 
-        PlayableSequenceManager.Instance?.ShowQuestText("Pick up the towel");
-        ArrowManager.Instance?.PointArrowTowards(towelPickupArrowTarget);
-        if (towelPickupTriggerObject != null) towelPickupTriggerObject.SetActive(true);
+        if (cloudVFX != null) cloudVFX.SetActive(false);
+        PlayVFX(afterShowerVFX);
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayEffectSound();
 
-        PatientAnimationController.Instance?.SetWalk();
-
-        yield return MovePatient(exitPoint1);
-        yield return MovePatient(exitPoint2);
-        yield return MovePatient(exitPoint3);
-        yield return MovePatient(exitPoint4);
-
-        PatientAnimationController.Instance?.SetIdle();
-
-        if (nextBuildingUnlockPoint != null) nextBuildingUnlockPoint.SetActive(true);
-    }
-
-    public void OnTowelPickedUp()
-    {
-        if (IsTowelPickedUp) return;
-        IsTowelPickedUp = true;
-
-        if (playerHandTowel != null) playerHandTowel.SetActive(true);
-
-        if (towelPickupGreenCircle != null) towelPickupGreenCircle.SetActive(false);
-        if (towelPickupTriggerObject != null) towelPickupTriggerObject.SetActive(false);
-
-        PlayableSequenceManager.Instance?.ShowQuestText("Deliver the towel");
-        ArrowManager.Instance?.PointArrowTowards(showerDeliveryArrowTarget);
-    }
-
-    public void OnTowelDelivered()
-    {
-        if (IsShowerCompleted) return;
-        IsShowerCompleted = true;
-
-        if (playerHandTowel != null) playerHandTowel.SetActive(false);
-        if (showerUIPanel != null) showerUIPanel.SetActive(false);
-
-        PlayableSequenceManager.Instance?.HideQuestText();
-        AudioManager.Instance?.PlayCleaningSound();
-
-        cashBundle?.Activate();
-
+        if (cashBundle != null) cashBundle.Activate();
         ArrowManager.Instance?.PointArrowTowards(cashArrowTarget);
-        PlayableSequenceManager.Instance?.ShowQuestText("Pick up cash");
+        if (PlayableSequenceManager.Instance != null)
+        {
+            PlayableSequenceManager.Instance.HideHeNeedsShower();
+            PlayableSequenceManager.Instance.ShowQuestText("Collect Cash");
+        }
+
+        if (gymUI != null) gymUI.SetActive(true);
+
+        if (mover != null)
+        {
+            mover.MovePath(_exitPath);
+            while (mover.IsMoving) yield return null;
+        }
+
+        if (PatientAnimationController.Instance != null)
+            PatientAnimationController.Instance.SetIdle();
+        IsShowerCompleted = true;
     }
 
     public void OnShowerCashCollected()
     {
+        if (gymUnlockPointObject != null) gymUnlockPointObject.SetActive(true);
+        if (gymUnlockObjectCanvas != null) gymUnlockObjectCanvas.SetActive(true);
+        TargetArrowIndicator.GoToTarget(6);
         PlayableSequenceManager.Instance?.ShowQuestText("Unlock Gym");
         ArrowManager.Instance?.PointArrowTowards(gymUnlockArrowTarget);
-    }
-
-    private IEnumerator MovePatient(Transform target)
-    {
-        if (target == null || patient == null)
-            yield break;
-        PatientAnimationController.Instance.SetWalk();
-        while (true)
-        {
-            Vector3 diff = target.position - patient.position;
-            diff.y = 0f;
-
-            if (diff.sqrMagnitude <= 0.01f)
-            {
-                patient.position = target.position;
-                yield break;
-            }
-
-            patient.position = Vector3.MoveTowards(
-                patient.position,
-                target.position,
-                moveSpeed * Time.unscaledDeltaTime
-            );
-
-            patient.rotation = Quaternion.Slerp(
-                patient.rotation,
-                Quaternion.LookRotation(diff),
-                rotationSpeed * Time.unscaledDeltaTime
-            );
-
-            yield return null;
-        }
     }
 }

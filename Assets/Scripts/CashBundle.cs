@@ -6,6 +6,9 @@ public class CashBundle : MonoBehaviour
     [SerializeField] private GameObject cash;
     [SerializeField] private GameObject player;
 
+    [Header("Next Building Unlock")]
+    [SerializeField] private GameObject nextBuildingUnlockPoint;
+
     private bool _collected;
     private bool _isActive;
 
@@ -13,10 +16,7 @@ public class CashBundle : MonoBehaviour
     {
         _collected = false;
         _isActive = true;
-        if (cash != null)
-        {
-            cash.SetActive(true);
-        }
+        if (cash != null && !cash.activeSelf) cash.SetActive(true);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -26,14 +26,19 @@ public class CashBundle : MonoBehaviour
 
         _collected = true;
         _isActive = false;
-        if (cash != null) cash.SetActive(false);
+
+        if (cash != null && cash.activeSelf) cash.SetActive(false);
 
         if (AudioManager.Instance != null) AudioManager.Instance.PlayCashCollectSound();
         if (WalletManager.Instance != null) WalletManager.Instance.AddMoney(cashValue);
 
         int unlockCount = BuildingUnlockManager.buildingUnlockCount;
 
-        if (unlockCount == 3 && ShowerManager.Instance != null)
+        if (unlockCount == 0 && ReceptionPatientController.Instance != null)
+        {
+            ReceptionPatientController.Instance.OnPatientServed();
+        }
+        else if (unlockCount == 3 && ShowerManager.Instance != null)
         {
             ShowerManager.Instance.OnShowerCashCollected();
         }

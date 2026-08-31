@@ -3,69 +3,200 @@ using UnityEngine;
 
 public class CameraFollower : MonoBehaviour
 {
-    [SerializeField] private Vector3 positionOffset;
+    public static CameraFollower Instance { get; private set; }
+
+    [Header("Follow Settings")]
     [SerializeField] private float followSpeed = 5f;
     [SerializeField] private Transform character;
 
+    [Header("Portrait Settings")]
+    [SerializeField] private Vector3 portraitPositionOffset;
+    [SerializeField] private Vector3 portraitRotationEuler;
+    [SerializeField] private Transform portraitIntroPoint;
+
+    [Header("Landscape Settings")]
+    [SerializeField] private Vector3 landscapePositionOffset;
+    [SerializeField] private Vector3 landscapeRotationEuler;
+    [SerializeField] private Transform landscapeIntroPoint;
+
+    [Header("Focus Durations")]
     [SerializeField] private float focusMoveDuration = 1f;
     [SerializeField] private float focusWaitDuration = 2f;
     [SerializeField] private float returnMoveDuration = 1f;
 
-    private bool _isFocusing;
+    [Header("Post-Intro Rotation")]
+    [SerializeField] private Vector3 postIntroRotationEuler = new Vector3(60f, 180f, 0f);
+    [SerializeField] private float postIntroRotateDuration = 0.4f;
+
+    [Header("Room Unlock Focus Points")]
+    [SerializeField] private Transform roomPoint;
+    [SerializeField] private Transform cafePoint;
+    [SerializeField] private Transform washroomPoint;
+    [SerializeField] private Transform gymPoint;
+
+    public enum RoomType { Room, Cafe, Washroom, Gym }
+
+    public bool IsFocusing { get; private set; }
+
     private Coroutine _focusCoroutine;
+    private Transform _transform;
+    private Vector3 _savedPosition;
+    private bool _isLandscape;
+    private int _lastWidth = -1;
+    private int _lastHeight = -1;
 
-    private WaitForSeconds _waitFocus;
+    private Quaternion _portraitRot;
+    private Quaternion _landscapeRot;
+    private Quaternion _postIntroRot;
 
-    private void Awake() => _waitFocus = new WaitForSeconds(focusWaitDuration);
+    private Vector3 _activeOffset;
+    private Quaternion _activeRotation;
+    private Transform _activeIntroPoint;
+
+    public Transform ActiveIntroPoint => _activeIntroPoint;
+
+    private void Awake()
+    {
+        Instance = this;
+        _transform = transform;
+        _portraitRot = Quaternion.Euler(portraitRotationEuler);
+        _landscapeRot = Quaternion.Euler(landscapeRotationEuler);
+        _postIntroRot = Quaternion.Euler(postIntroRotationEuler);
+        UpdateScreenDimensions();
+    }
+
+    private void UpdateScreenDimensions()
+    {
+        int sw = Screen.width;
+        int sh = Screen.height;
+        if (sw != _lastWidth || sh != _lastHeight)
+        {
+            _lastWidth = sw;
+            _lastHeight = sh;
+            _isLandscape = sw > sh;
+
+            _activeOffset = _isLandscape ? landscapePositionOffset : portraitPositionOffset;
+            _activeRotation = _isLandscape ? _landscapeRot : _portraitRot;
+            _activeIntroPoint = _isLandscape ? landscapeIntroPoint : portraitIntroPoint;
+        }
+    }
 
     private void LateUpdate()
     {
-        if (_isFocusing || character == null) return;
-        transform.position = Vector3.Lerp(
-            transform.position,
-            character.position + positionOffset,
-            followSpeed * Time.deltaTime);
+        UpdateScreenDimensions();
+
+        if (IsFocusing || character == null) return;
+
+        float dt = Time.deltaTime * followSpeed;
+        _transform.position = Vector3.Lerp(_transform.position, character.position + _activeOffset, dt);
+        _transform.rotation = Quaternion.Lerp(_transform.rotation, _activeRotation, dt);
     }
 
-    public void FocusOnBuilding(Transform focusPoint)
+    public void FocusOnRoom(RoomType room, float waitOverride = -1f)
     {
-        if (focusPoint == null) return;
+        Transform point = null;
+        switch (room)
+        {
+            case RoomType.Room: point = roomPoint; break;
+            case RoomType.Cafe: point = cafePoint; break;
+            case RoomType.Washroom: point = washroomPoint; break;
+            case RoomType.Gym: point = gymPoint; break;
+        }
+
+        if (point == null) return;
         if (_focusCoroutine != null) StopCoroutine(_focusCoroutine);
-        _focusCoroutine = StartCoroutine(FocusRoutine(focusPoint));
+        _focusCoroutine = StartCoroutine(FocusOnRoomRoutine(point, waitOverride));
     }
 
-    private IEnumerator FocusRoutine(Transform focusPoint)
+    private IEnumerator FocusOnRoomRoutine(Transform focusPoint, float waitOverride)
     {
-        if (focusPoint == null || character == null) yield break;
+        if (focusPoint == null) yield break;
 
-        _isFocusing = true;
+        IsFocusing = true;
+        _savedPosition = _transform.position;
 
-        Vector3 startPos = transform.position;
-        Vector3 returnPos = character.position + positionOffset;
+        Vector3 focusPos = focusPoint.position;
 
-        yield return MoveCamera(startPos, focusPoint.position, focusMoveDuration);
-        yield return _waitFocus;
+        float elapsed = 0f;
+        float invMove = focusMoveDuration > 0f ? 1f / focusMoveDuration : 1f;
+        while (elapsed < focusMoveDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed * invMove);
+            _transform.position = Vector3.Lerp(_savedPosition, focusPos, t);
+            yield return null;
+        }
+        _transform.position = focusPos;
 
-        returnPos = character.position + positionOffset;
-        yield return MoveCamera(transform.position, returnPos, returnMoveDuration);
+        float holdTime = waitOverride >= 0f ? waitOverride : focusWaitDuration;
+        float holdElapsed = 0f;
+        while (holdElapsed < holdTime)
+        {
+            holdElapsed += Time.deltaTime;
+            yield return null;
+        }
 
-        transform.position = returnPos;
-        _isFocusing = false;
+        Vector3 returnFrom = _transform.position;
+        elapsed = 0f;
+        float invReturn = returnMoveDuration > 0f ? 1f / returnMoveDuration : 1f;
+        while (elapsed < returnMoveDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed * invReturn);
+            _transform.position = Vector3.Lerp(returnFrom, _savedPosition, t);
+            yield return null;
+        }
+        _transform.position = _savedPosition;
+
+        IsFocusing = false;
         _focusCoroutine = null;
     }
 
-    private IEnumerator MoveCamera(Vector3 from, Vector3 to, float duration)
+    public IEnumerator PlayIntroRoutine(float moveDuration, float holdDuration)
     {
-        float elapsed = 0f;
-        float invDur = duration > 0f ? (1f / duration) : 1f;
+        Transform introPoint = _activeIntroPoint;
+        if (introPoint == null) yield break;
 
-        while (elapsed < duration)
+        IsFocusing = true;
+
+        Vector3 startPos = _transform.position;
+        Quaternion startRot = _transform.rotation;
+
+        float elapsed = 0f;
+        float invDur = moveDuration > 0f ? 1f / moveDuration : 1f;
+
+        while (elapsed < moveDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, elapsed * invDur);
-            transform.position = Vector3.Lerp(from, to, t);
+            _transform.position = Vector3.Lerp(startPos, introPoint.position, t);
+            _transform.rotation = Quaternion.Slerp(startRot, introPoint.rotation, t);
             yield return null;
         }
-        transform.position = to;
+
+        _transform.SetPositionAndRotation(introPoint.position, introPoint.rotation);
+
+        float holdElapsed = 0f;
+        while (holdElapsed < holdDuration)
+        {
+            holdElapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Quaternion fromRot = _transform.rotation;
+        Quaternion targetRot = _postIntroRot;
+        float rotElapsed = 0f;
+        float rotInvDur = postIntroRotateDuration > 0f ? 1f / postIntroRotateDuration : 1f;
+
+        while (rotElapsed < postIntroRotateDuration)
+        {
+            rotElapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, rotElapsed * rotInvDur);
+            _transform.rotation = Quaternion.Slerp(fromRot, targetRot, t);
+            yield return null;
+        }
+        _transform.rotation = targetRot;
+
+        IsFocusing = false;
     }
 }

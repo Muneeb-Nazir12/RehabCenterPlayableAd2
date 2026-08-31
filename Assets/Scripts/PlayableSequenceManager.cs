@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,84 +5,137 @@ public class PlayableSequenceManager : MonoBehaviour
 {
     public static PlayableSequenceManager Instance { get; private set; }
 
-    public enum SequenceStep
+    [Header("Portrait Panels")]
+    [SerializeField] private GameObject portraitQuestPanel;
+    [SerializeField] private Text portraitQuestText;
+
+    [Header("Landscape Panels")]
+    [SerializeField] private GameObject landscapeQuestPanel;
+    [SerializeField] private Text landscapeQuestText;
+
+    [Header("He Needs Shower — Portrait / Landscape")]
+    [SerializeField] private GameObject heNeedsShowerPortrait;
+    [SerializeField] private GameObject heNeedsShowerLandscape;
+
+    [Header("Gym Final Recovery — Portrait / Landscape")]
+    [SerializeField] private GameObject gymFinalRecoveryPortrait;
+    [SerializeField] private GameObject gymFinalRecoveryLandscape;
+
+    [Header("Kitchen Feed Him — Portrait / Landscape")]
+    [SerializeField] private GameObject kitchenFeedHimPortrait;
+    [SerializeField] private GameObject kitchenFeedHimLandscape;
+
+    private string _currentQuestText = "";
+    private bool _isShowing = false;
+    private int _lastWidth, _lastHeight;
+    private bool _isLandscape;
+
+    private void Awake()
     {
-        IntroHook        = 1,
-        Bedroom          = 2,
-        Kitchen          = 3,
-        Shower           = 4,
-        Gym              = 5,
-        FullyRecovered   = 6,
-        AutomationEndCard = 7
+        Instance = this;
+        _lastWidth = Screen.width;
+        _lastHeight = Screen.height;
+        _isLandscape = _lastWidth > _lastHeight;
     }
 
-    [Header("Headers")]
-    [SerializeField] private GameObject headerHelpHimRecover;
-    [SerializeField] private GameObject headerKitchenFeedHim;
-    [SerializeField] private GameObject headerHeNeedsShower;
-    [SerializeField] private GameObject headerGymFinalRecovery;
-    [SerializeField] private GameObject headerFullyRecovered;
-    
-    [Header("Quest Panel")]
-    [SerializeField] private GameObject questPanel;
-    [SerializeField] private Text       questText;
-
-    public SequenceStep CurrentStep { get; private set; } = SequenceStep.IntroHook;
-
-    public GameObject GetHeaderKitchen() => headerKitchenFeedHim;
-
-    private void Awake() => Instance = this; 
-
-    public void SetStep(SequenceStep step)
+    private void Update()
     {
-        CurrentStep = step;
+        int sw = Screen.width;
+        int sh = Screen.height;
+        if (sw == _lastWidth && sh == _lastHeight) return;
 
-        switch (step)
+        _lastWidth = sw;
+        _lastHeight = sh;
+        _isLandscape = sw > sh;
+
+        if (_isShowing) RefreshQuestPanels();
+        RefreshDualObjects();
+    }
+
+    private static void SetGoActive(GameObject go, bool state)
+    {
+        if (go != null && go.activeSelf != state) go.SetActive(state);
+    }
+
+    private void RefreshQuestPanels()
+    {
+        if (_isLandscape)
         {
-            case SequenceStep.Bedroom:
-                ActivateHeader(null);
-                ShowQuestText("Unlock the room");
-                break;
-
-            case SequenceStep.Kitchen:
-                ActivateHeader(headerKitchenFeedHim);
-                HideQuestText();
-                break;
-
-            case SequenceStep.Shower:
-                ActivateHeader(headerHeNeedsShower);
-                HideQuestText();
-                break;
-
-            case SequenceStep.Gym:
-                ActivateHeader(headerGymFinalRecovery);
-                HideQuestText();
-                break;
-
-            case SequenceStep.FullyRecovered:
-                ActivateHeader(headerFullyRecovered);
-                ShowQuestText("Fully Recovered!");
-                break;
+            SetGoActive(portraitQuestPanel, false);
+            if (landscapeQuestText != null) landscapeQuestText.text = _currentQuestText;
+            SetGoActive(landscapeQuestPanel, true);
         }
-    }
-
-    public void ActivateHeader(GameObject activeHeader)
-    {
-        if (headerHelpHimRecover   != null) headerHelpHimRecover  .SetActive(headerHelpHimRecover   == activeHeader);
-        if (headerKitchenFeedHim   != null) headerKitchenFeedHim  .SetActive(headerKitchenFeedHim   == activeHeader);
-        if (headerHeNeedsShower    != null) headerHeNeedsShower   .SetActive(headerHeNeedsShower    == activeHeader);
-        if (headerGymFinalRecovery != null) headerGymFinalRecovery.SetActive(headerGymFinalRecovery == activeHeader);
-        if (headerFullyRecovered   != null) headerFullyRecovered  .SetActive(headerFullyRecovered   == activeHeader);
+        else
+        {
+            SetGoActive(landscapeQuestPanel, false);
+            if (portraitQuestText != null) portraitQuestText.text = _currentQuestText;
+            SetGoActive(portraitQuestPanel, true);
+        }
     }
 
     public void ShowQuestText(string text)
     {
-        if (questPanel != null) questPanel.SetActive(true);
-        if (questText  != null) questText.text = text;
+        _currentQuestText = text;
+        _isShowing = true;
+        RefreshQuestPanels();
     }
 
     public void HideQuestText()
     {
-        if (questPanel != null) questPanel.SetActive(false);
+        _isShowing = false;
+        _currentQuestText = "";
+        SetGoActive(portraitQuestPanel, false);
+        SetGoActive(landscapeQuestPanel, false);
+    }
+
+    private void RefreshDualObjects()
+    {
+        SyncDualObject(heNeedsShowerPortrait, heNeedsShowerLandscape);
+        SyncDualObject(gymFinalRecoveryPortrait, gymFinalRecoveryLandscape);
+        SyncDualObject(kitchenFeedHimPortrait, kitchenFeedHimLandscape);
+    }
+
+    private void SyncDualObject(GameObject portrait, GameObject landscape)
+    {
+        if (portrait == null || landscape == null) return;
+        bool isActive = portrait.activeSelf || landscape.activeSelf;
+        SetGoActive(portrait, isActive && !_isLandscape);
+        SetGoActive(landscape, isActive && _isLandscape);
+    }
+
+    public void ShowHeNeedsShower()
+    {
+        SetGoActive(heNeedsShowerPortrait, !_isLandscape);
+        SetGoActive(heNeedsShowerLandscape, _isLandscape);
+    }
+
+    public void HideHeNeedsShower()
+    {
+        SetGoActive(heNeedsShowerPortrait, false);
+        SetGoActive(heNeedsShowerLandscape, false);
+    }
+
+    public void ShowGymFinalRecovery()
+    {
+        SetGoActive(gymFinalRecoveryPortrait, !_isLandscape);
+        SetGoActive(gymFinalRecoveryLandscape, _isLandscape);
+    }
+
+    public void HideGymFinalRecovery()
+    {
+        SetGoActive(gymFinalRecoveryPortrait, false);
+        SetGoActive(gymFinalRecoveryLandscape, false);
+    }
+
+    public void ShowKitchenFeedHim()
+    {
+        SetGoActive(kitchenFeedHimPortrait, !_isLandscape);
+        SetGoActive(kitchenFeedHimLandscape, _isLandscape);
+    }
+
+    public void HideKitchenFeedHim()
+    {
+        SetGoActive(kitchenFeedHimPortrait, false);
+        SetGoActive(kitchenFeedHimLandscape, false);
     }
 }

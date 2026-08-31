@@ -22,17 +22,19 @@ public class TableCleaningTrigger : MonoBehaviour
     {
         _invDuration = cleaningDuration > 0f ? (1f / cleaningDuration) : 2f;
         if (fillImage != null) fillImage.fillAmount = 0f;
+        enabled = false;
     }
 
     private void Update()
     {
-        if (!_playerInside || _cleaned) return;
+        if (!_playerInside || _cleaned)
+        {
+            enabled = false;
+            return;
+        }
 
-        // FIX: Do not progress cleaning if the table is not actually dirty yet.
-        // This prevents the table being "cleaned" before the patient ever sits down.
         if (CafePatientController.Instance != null && !CafePatientController.Instance.IsTableDirty)
         {
-            // Reset any partial fill and push the player back out of cleaning state
             if (_elapsed > 0f)
             {
                 _elapsed = 0f;
@@ -47,6 +49,7 @@ public class TableCleaningTrigger : MonoBehaviour
         if (_elapsed >= cleaningDuration)
         {
             _cleaned = true;
+            enabled = false;
             if (fillImage != null) fillImage.fillAmount = 1f;
             OnCleaningDone();
         }
@@ -54,11 +57,11 @@ public class TableCleaningTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (_cleaned || other == null || (other.gameObject != player)) return;
+        if (_cleaned || other == null || (player != null && other.gameObject != player)) return;
+        TargetArrowIndicator.Hide(8);
         _playerInside = true;
+        enabled = true;
 
-        // FIX: Only lock movement and show mop if table is actually dirty.
-        // If the patient hasn't dirtied the table yet, let the player walk through freely.
         bool isDirty = CafePatientController.Instance != null && CafePatientController.Instance.IsTableDirty;
         if (!isDirty) return;
 
@@ -72,6 +75,7 @@ public class TableCleaningTrigger : MonoBehaviour
     {
         if (other == null || (player != null && other.gameObject != player)) return;
         _playerInside = false;
+        enabled = false;
         if (mop != null) mop.SetActive(false);
         if (characterMovement != null) characterMovement.canMove = true;
         if (playerAnim != null) playerAnim.StopCleaningState();
